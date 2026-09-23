@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Nice Jewish Runners",
+    "slug": "nice-jewish-runners",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#1F3A63"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "org.nicejewishrunners.app"
+    },
+    "android": {
+      "package": "org.nicejewishrunners.app"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
