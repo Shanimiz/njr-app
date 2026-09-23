@@ -56,12 +56,14 @@ interface AppState {
  * registered" — saved to on-device storage so a completed registration
  * survives closing and reopening the app, instead of resetting every time
  * (there's no real backend account system yet; this is the mock stand-in
- * for "you're logged in"). */
+ * for "you're logged in"). Deliberately does NOT include activeChapterId —
+ * the chapter-picker screen is always the app's home screen on launch;
+ * only the registration/profile steps should be skipped for a chapter the
+ * member has already joined, never the picker screen itself. */
 interface PersistedMember {
   user: UserProfile;
   memberships: Membership[];
   selectedChapterIds: string[];
-  activeChapterId: string | null;
 }
 
 const STORAGE_KEY = 'njr:member';
@@ -227,15 +229,19 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'HYDRATE': {
       if (!action.payload) return { ...state, hydrated: true };
-      const { user, memberships, selectedChapterIds, activeChapterId } = action.payload;
+      const { user, memberships, selectedChapterIds } = action.payload;
       const users = { ...state.users, [state.currentUserId]: user };
       const othersMemberships = state.memberships.filter((m) => m.userId !== state.currentUserId);
+      // activeChapterId is deliberately left as-is (null on a fresh app
+      // launch) — the chapter picker is always the first thing a member
+      // sees. Restoring their profile and membership here is what lets
+      // that screen recognize them and skip straight past the
+      // registration form for a chapter they've already joined.
       return {
         ...state,
         users,
         memberships: [...othersMemberships, ...memberships],
         selectedChapterIds,
-        activeChapterId,
         hydrated: true,
       };
     }
@@ -301,10 +307,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       user: state.users[state.currentUserId],
       memberships: state.memberships.filter((m) => m.userId === state.currentUserId),
       selectedChapterIds: state.selectedChapterIds,
-      activeChapterId: state.activeChapterId,
     };
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload)).catch(() => {});
-  }, [state.hydrated, state.users, state.memberships, state.selectedChapterIds, state.activeChapterId, state.currentUserId]);
+  }, [state.hydrated, state.users, state.memberships, state.selectedChapterIds, state.currentUserId]);
 
   const getMembership = useCallback(
     (userId: string, chapterId: string) =>
