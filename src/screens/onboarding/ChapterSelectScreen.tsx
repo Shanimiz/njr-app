@@ -19,7 +19,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ChapterSelect'>;
  * approved membership for skip straight through.
  */
 export function ChapterSelectScreen({ navigation }: Props) {
-  const { chapters, selectedChapterIds, memberships, currentUserId, dispatch } = useApp();
+  const { chapters, selectedChapterIds, memberships, currentUserId, currentUser, dispatch } = useApp();
 
   const toggle = (chapterId: string) => dispatch({ type: 'TOGGLE_CHAPTER_SELECTION', chapterId });
   const continueLabel =
@@ -33,6 +33,10 @@ export function ChapterSelectScreen({ navigation }: Props) {
     );
     if (chapterNeedingJoin) {
       navigation.navigate('JoinChapter', { chapterId: chapterNeedingJoin });
+    } else if (!currentUser.photoUrl) {
+      // Every chosen chapter already has an application in, but this
+      // first-time user still needs to set up a profile (photo + bio).
+      navigation.navigate('CompleteProfile');
     } else {
       dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
     }

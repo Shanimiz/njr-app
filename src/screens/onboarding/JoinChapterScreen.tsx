@@ -10,9 +10,11 @@ import type { RootStackParamList } from '@/navigation/types';
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinChapter'>;
 
 /**
- * The membership application. Fields match what the club asked for:
- * identity, an emergency contact, a light social-verification question, and
- * a profile (photo + bio) so other members can recognize each other.
+ * The membership application: identity, an emergency contact, and a light
+ * social-verification question. Photo + bio are a separate step
+ * (CompleteProfileScreen) that runs once after all chosen chapters are
+ * applied to — profile info is shared across chapters, so it doesn't repeat
+ * per chapter the way this form does.
  *
  * The membership-fee block at the bottom is built and wired into the UI per
  * the brief ("have it in the code, we can remove it") but nothing charges
@@ -29,7 +31,6 @@ export function JoinChapterScreen({ route, navigation }: Props) {
   const [emergencyPhone, setEmergencyPhone] = useState(currentUser.emergencyContactPhone);
   const [instagram, setInstagram] = useState(currentUser.instagramHandle ?? '');
   const [safetyAnswer, setSafetyAnswer] = useState('');
-  const [bio, setBio] = useState('');
 
   if (!chapter) return null;
 
@@ -40,16 +41,20 @@ export function JoinChapterScreen({ route, navigation }: Props) {
     dispatch({
       type: 'SUBMIT_JOIN_REQUEST',
       chapterId: chapter.id,
-      profile: { fullName, phone, emergencyContactName: emergencyName, emergencyContactPhone: emergencyPhone, instagramHandle: instagram, safetyAnswer, bio },
+      profile: { fullName, phone, emergencyContactName: emergencyName, emergencyContactPhone: emergencyPhone, instagramHandle: instagram, safetyAnswer },
     });
     // If onboarding covers more than one chapter (multi-city selection),
     // chain straight into the next one that still needs an application
-    // rather than bouncing back to the picker.
+    // rather than bouncing back to the picker. Once every chosen chapter
+    // has an application in, a first-time user still needs a photo + bio
+    // (CompleteProfileScreen) before landing in the app.
     const stillNeeds = selectedChapterIds.find(
       (id) => id !== chapter.id && !memberships.some((m) => m.userId === currentUserId && m.chapterId === id)
     );
     if (stillNeeds) {
       navigation.replace('JoinChapter', { chapterId: stillNeeds });
+    } else if (!currentUser.photoUrl) {
+      navigation.replace('CompleteProfile');
     } else {
       dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
     }
@@ -60,12 +65,15 @@ export function JoinChapterScreen({ route, navigation }: Props) {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <Text onPress={() => navigation.goBack()} style={styles.back}>
-          ← BACK
-        </Text>
-        <Text style={styles.title}>JOIN {chapter.name.toUpperCase()}</Text>
-        <Text style={styles.subtitle}>Goes to a chapter admin for approval</Text>
+      <View style={styles.headerWrap}>
+        <View style={styles.header}>
+          <Text onPress={() => navigation.goBack()} style={styles.back}>
+            ← BACK
+          </Text>
+          <Text style={styles.title}>JOIN {chapter.name.toUpperCase()}</Text>
+          <Text style={styles.subtitle}>Goes to a chapter admin for approval</Text>
+        </View>
+        <View style={styles.headerAngle} />
       </View>
 
       <ScrollView contentContainerStyle={styles.form}>
@@ -78,11 +86,8 @@ export function JoinChapterScreen({ route, navigation }: Props) {
         <Field label="Emergency phone" value={emergencyPhone} onChangeText={setEmergencyPhone} keyboardType="phone-pad" />
 
         <Section title="VERIFICATION" />
-        <Field label="Instagram" value={instagram} onChangeText={setInstagram} autoCapitalize="none" />
+        <Field label="Instagram / social handle" value={instagram} onChangeText={setInstagram} autoCapitalize="none" />
         <Field label="What's your favorite Jewish holiday?" value={safetyAnswer} onChangeText={setSafetyAnswer} />
-
-        <Section title="YOUR PROFILE" />
-        <Field label="Short bio" value={bio} onChangeText={setBio} multiline />
 
         {chapter.membershipEnabled ? (
           <View style={styles.membershipCard}>
@@ -127,7 +132,9 @@ function Field(props: { label: string; value: string; onChangeText: (v: string) 
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: colors.navy, paddingTop: 16, paddingBottom: 18, paddingHorizontal: spacing.lg },
+  headerWrap: { backgroundColor: colors.navy, overflow: 'hidden' },
+  header: { paddingTop: 16, paddingBottom: 30, paddingHorizontal: spacing.lg },
+  headerAngle: { position: 'absolute', left: -24, right: -24, bottom: -18, height: 40, backgroundColor: colors.white, transform: [{ rotate: '-2.5deg' }] },
   back: { color: colors.white, fontFamily: fonts.bodyBold, fontSize: 12 },
   title: { color: colors.white, fontFamily: fonts.display, fontSize: 26, marginTop: 8, letterSpacing: 0.4 },
   subtitle: { color: colors.border, fontFamily: fonts.bodyRegular, fontSize: 11, marginTop: 2 },

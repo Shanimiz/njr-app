@@ -31,9 +31,11 @@ export function ProfileScreen() {
   return (
     <Screen edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
-        <View style={styles.banner} />
+        <View style={styles.banner}>
+          <View style={styles.bannerAngle} />
+        </View>
         <View style={styles.body}>
-          <Avatar size={70} bg={colors.gold} />
+          <Avatar size={70} bg={colors.gold} uri={currentUser.photoUrl} />
           <View style={styles.nameRow}>
             <Text style={styles.name}>{currentUser.fullName.toUpperCase()}</Text>
             <RoleBadge role={activeRole} />
@@ -102,7 +104,8 @@ function RoleRow({ name, role, editable }: { name: string; role: ChapterRole; ed
 }
 
 const styles = StyleSheet.create({
-  banner: { height: 90, backgroundColor: colors.navy },
+  banner: { height: 90, backgroundColor: colors.navy, overflow: 'hidden' },
+  bannerAngle: { position: 'absolute', left: -24, right: -24, bottom: -18, height: 40, backgroundColor: colors.white, transform: [{ rotate: '-2.5deg' }] },
   body: { paddingHorizontal: spacing.lg, marginTop: -35, gap: 10 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
   name: { fontFamily: fonts.display, fontSize: 24, color: colors.navy, letterSpacing: 0.3 },

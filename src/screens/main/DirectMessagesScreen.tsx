@@ -26,16 +26,19 @@ export function DirectMessagesScreen({ navigation }: Props) {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Pressable onPress={() => navigation.goBack()}>
-            <Text style={styles.back}>←</Text>
+      <View style={styles.headerWrap}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Pressable onPress={() => navigation.goBack()}>
+              <Text style={styles.back}>←</Text>
+            </Pressable>
+            <Text style={styles.title}>MESSAGES</Text>
+          </View>
+          <Pressable style={styles.newBtn}>
+            <Text style={styles.newBtnText}>✎</Text>
           </Pressable>
-          <Text style={styles.title}>MESSAGES</Text>
         </View>
-        <Pressable style={styles.newBtn}>
-          <Text style={styles.newBtnText}>✎</Text>
-        </Pressable>
+        <View style={styles.headerAngle} />
       </View>
 
       <FlatList
@@ -64,7 +67,9 @@ export function DirectMessagesScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: colors.navy, paddingTop: 12, paddingBottom: 16, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerWrap: { backgroundColor: colors.navy, overflow: 'hidden' },
+  header: { paddingTop: 12, paddingBottom: 28, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerAngle: { position: 'absolute', left: -24, right: -24, bottom: -18, height: 40, backgroundColor: colors.white, transform: [{ rotate: '-2.5deg' }] },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   back: { color: colors.white, fontSize: 18 },
   title: { fontFamily: fonts.display, fontSize: 24, color: colors.white, letterSpacing: 0.4 },

@@ -25,16 +25,19 @@ export function ChatsListScreen({ navigation }: Props) {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>CHATS</Text>
-          <Text style={styles.subtitle}>{activeChapter.city.toUpperCase()} · {canCreate ? 'YOU CAN CREATE CHATS' : 'ADMIN-ONLY CREATE'}</Text>
+      <View style={styles.headerWrap}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>CHATS</Text>
+            <Text style={styles.subtitle}>{activeChapter.city.toUpperCase()} · {canCreate ? 'YOU CAN CREATE CHATS' : 'ADMIN-ONLY CREATE'}</Text>
+          </View>
+          {canCreate ? (
+            <Pressable style={styles.newBtn}>
+              <Text style={styles.newBtnText}>＋</Text>
+            </Pressable>
+          ) : null}
         </View>
-        {canCreate ? (
-          <Pressable style={styles.newBtn}>
-            <Text style={styles.newBtnText}>＋</Text>
-          </Pressable>
-        ) : null}
+        <View style={styles.headerAngle} />
       </View>
 
       <FlatList
@@ -69,7 +72,9 @@ function ChatRow({ channel, preview, onPress }: { channel: ChatChannel; preview:
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: colors.navy, paddingTop: 12, paddingBottom: 16, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerWrap: { backgroundColor: colors.navy, overflow: 'hidden' },
+  header: { paddingTop: 12, paddingBottom: 28, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerAngle: { position: 'absolute', left: -24, right: -24, bottom: -18, height: 40, backgroundColor: colors.white, transform: [{ rotate: '-2.5deg' }] },
   title: { fontFamily: fonts.display, fontSize: 26, color: colors.white, letterSpacing: 0.4 },
   subtitle: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.border, letterSpacing: 0.4, marginTop: 2 },
   newBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },

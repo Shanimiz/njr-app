@@ -64,10 +64,10 @@ type Action =
         emergencyContactPhone: string;
         instagramHandle: string;
         safetyAnswer: string;
-        bio: string;
       };
     }
-  | { type: 'RECORD_PAYMENT'; kind: PaymentKind; chapterId: string; eventId?: string; amountCents: number; currency: 'USD' | 'ILS' };
+  | { type: 'RECORD_PAYMENT'; kind: PaymentKind; chapterId: string; eventId?: string; amountCents: number; currency: 'USD' | 'ILS' }
+  | { type: 'COMPLETE_PROFILE'; photoUrl: string; bio: string };
 
 const initialState: AppState = {
   currentUserId,
@@ -155,7 +155,6 @@ function reducer(state: AppState, action: Action): AppState {
           emergencyContactPhone: action.profile.emergencyContactPhone,
           instagramHandle: action.profile.instagramHandle || undefined,
           safetyAnswer: action.profile.safetyAnswer,
-          bio: action.profile.bio || existingUser.bio,
         },
       };
       // One membership record per user+chapter — replace any prior attempt
@@ -195,6 +194,13 @@ function reducer(state: AppState, action: Action): AppState {
         );
       }
       return { ...state, payments: [...state.payments, payment], events };
+    }
+    case 'COMPLETE_PROFILE': {
+      const users = {
+        ...state.users,
+        [state.currentUserId]: { ...state.users[state.currentUserId], photoUrl: action.photoUrl, bio: action.bio },
+      };
+      return { ...state, users };
     }
     default:
       return state;

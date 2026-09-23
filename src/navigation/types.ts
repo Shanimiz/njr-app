@@ -1,6 +1,7 @@
 export type RootStackParamList = {
   ChapterSelect: undefined;
   JoinChapter: { chapterId: string };
+  CompleteProfile: undefined;
   Main: undefined;
   DirectMessages: undefined;
   Payment: { eventId: string; mode: 'pay' | 'tip' };

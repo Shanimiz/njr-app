@@ -58,18 +58,23 @@ export const chapters: Chapter[] = [
 ];
 
 export const users: Record<string, UserProfile> = {
+  // The signed-in demo account starts as a genuine first-time user — no
+  // name, no membership, no profile yet — so opening the app shows exactly
+  // what a brand-new person sees: pick a chapter, apply, then set up a
+  // profile. (See `memberships` below: intentionally no u_shani entries.)
   u_shani: {
     id: 'u_shani',
-    fullName: 'Shani Mizrahi',
-    phone: '+1 (917) 555-0134',
-    emergencyContactName: 'Dana Mizrahi — sister',
-    emergencyContactPhone: '+1 (917) 555-0199',
-    instagramHandle: '@shani.runs',
+    fullName: '',
+    phone: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    instagramHandle: undefined,
     safetyQuestion: "What's your favorite Jewish holiday?",
-    safetyAnswer: 'Sukkot — I love the outdoor meals',
-    bio: "Marathon #3 in training. Slow and steady, always down for bagels after.",
-    memberSince: '2023-03-01',
-    runsJoined: 34,
+    safetyAnswer: '',
+    bio: '',
+    photoUrl: undefined,
+    memberSince: new Date().toISOString().slice(0, 10),
+    runsJoined: 0,
   },
   u_ron: {
     id: 'u_ron',
@@ -134,8 +139,8 @@ export const users: Record<string, UserProfile> = {
 };
 
 export const memberships: Membership[] = [
-  { userId: 'u_shani', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2023-03-01' },
-  { userId: 'u_shani', chapterId: 'ch_tlv', role: 'member', status: 'approved', requestedAt: '2023-04-01' },
+  // No u_shani entries — she's the "new user" demo account and should have
+  // to go through the join flow for whatever chapter(s) she picks.
   { userId: 'u_ron', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2019-06-01' },
   { userId: 'u_ezra', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2019-08-15' },
   { userId: 'u_arielle', chapterId: 'ch_nyc', role: 'owner', status: 'approved', requestedAt: '2020-01-10' },
