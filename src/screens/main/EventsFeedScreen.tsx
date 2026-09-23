@@ -38,6 +38,7 @@ export function EventsFeedScreen({ navigation }: Props) {
 
   return (
     <Screen edges={['top', 'bottom']}>
+      <View style={styles.headerWrap}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={styles.greeting}>{activeChapter.name.toUpperCase()} CREW</Text>
@@ -72,6 +73,8 @@ export function EventsFeedScreen({ navigation }: Props) {
             })}
           </View>
         ) : null}
+      </View>
+      <View style={styles.headerAngle} />
       </View>
 
       <FlatList
@@ -113,7 +116,9 @@ function EventCard({ event, onPress }: { event: RunEvent; onPress: () => void })
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: colors.navy, paddingTop: 12, paddingBottom: 16, paddingHorizontal: spacing.lg },
+  headerWrap: { backgroundColor: colors.navy, overflow: 'hidden' },
+  header: { paddingTop: 12, paddingBottom: 28, paddingHorizontal: spacing.lg },
+  headerAngle: { position: 'absolute', left: -24, right: -24, bottom: -18, height: 40, backgroundColor: colors.white, transform: [{ rotate: '-2.5deg' }] },
   headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   greeting: { fontFamily: fonts.display, fontSize: 24, color: colors.white, letterSpacing: 0.4 },
   dmIcon: { fontSize: 20 },

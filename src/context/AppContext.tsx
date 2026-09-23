@@ -20,6 +20,8 @@ import type {
   DMThread,
   EventMessage,
   Membership,
+  PaymentKind,
+  PaymentRecord,
   RunEvent,
   UserProfile,
 } from '@/types';
@@ -35,6 +37,7 @@ interface AppState {
   eventMessages: EventMessage[];
   dmThreads: DMThread[];
   dmMessages: DMMessage[];
+  payments: PaymentRecord[];
   /** Chapters the signed-in user picked on the chapter-select screen. Empty
    * until onboarding completes. */
   selectedChapterIds: string[];
@@ -50,7 +53,21 @@ type Action =
   | { type: 'RSVP_EVENT'; eventId: string; status: 'going' | 'maybe' | 'none' }
   | { type: 'SEND_CHAT_MESSAGE'; channelId: string; text: string }
   | { type: 'DELETE_CHAT_MESSAGE'; messageId: string }
-  | { type: 'SEND_DM'; threadId: string; text: string };
+  | { type: 'SEND_DM'; threadId: string; text: string }
+  | {
+      type: 'SUBMIT_JOIN_REQUEST';
+      chapterId: string;
+      profile: {
+        fullName: string;
+        phone: string;
+        emergencyContactName: string;
+        emergencyContactPhone: string;
+        instagramHandle: string;
+        safetyAnswer: string;
+        bio: string;
+      };
+    }
+  | { type: 'RECORD_PAYMENT'; kind: PaymentKind; chapterId: string; eventId?: string; amountCents: number; currency: 'USD' | 'ILS' };
 
 const initialState: AppState = {
   currentUserId,
@@ -63,6 +80,7 @@ const initialState: AppState = {
   eventMessages: seedEventMessages,
   dmThreads: seedDmThreads,
   dmMessages: seedDmMessages,
+  payments: [],
   // A real signed-in user starts having picked nothing yet — the app opens
   // on the chapter-select screen. See RootNavigator for how this gates
   // navigation.
@@ -124,6 +142,59 @@ function reducer(state: AppState, action: Action): AppState {
         t.id === action.threadId ? { ...t, lastMessageText: action.text, lastMessageAt: message.createdAt } : t
       );
       return { ...state, dmMessages: [...state.dmMessages, message], dmThreads };
+    }
+    case 'SUBMIT_JOIN_REQUEST': {
+      const existingUser = state.users[state.currentUserId];
+      const users = {
+        ...state.users,
+        [state.currentUserId]: {
+          ...existingUser,
+          fullName: action.profile.fullName,
+          phone: action.profile.phone,
+          emergencyContactName: action.profile.emergencyContactName,
+          emergencyContactPhone: action.profile.emergencyContactPhone,
+          instagramHandle: action.profile.instagramHandle || undefined,
+          safetyAnswer: action.profile.safetyAnswer,
+          bio: action.profile.bio || existingUser.bio,
+        },
+      };
+      // One membership record per user+chapter — replace any prior attempt
+      // (e.g. a rejected request) rather than stacking duplicates.
+      const withoutExisting = state.memberships.filter(
+        (m) => !(m.userId === state.currentUserId && m.chapterId === action.chapterId)
+      );
+      const membership: Membership = {
+        userId: state.currentUserId,
+        chapterId: action.chapterId,
+        role: 'member',
+        status: 'pending',
+        requestedAt: new Date().toISOString(),
+      };
+      return { ...state, users, memberships: [...withoutExisting, membership] };
+    }
+    case 'RECORD_PAYMENT': {
+      const payment: PaymentRecord = {
+        id: `pay_${Date.now()}`,
+        kind: action.kind,
+        userId: state.currentUserId,
+        chapterId: action.chapterId,
+        eventId: action.eventId,
+        amountCents: action.amountCents,
+        currency: action.currency,
+        // Mocked: there's no real Stripe call yet (see src/lib/payments.ts),
+        // so every payment "succeeds" instantly.
+        status: 'succeeded',
+        createdAt: new Date().toISOString(),
+      };
+      let events = state.events;
+      if (action.kind === 'event_fee' && action.eventId) {
+        events = state.events.map((ev) =>
+          ev.id === action.eventId && !ev.goingUserIds.includes(state.currentUserId)
+            ? { ...ev, goingUserIds: [...ev.goingUserIds, state.currentUserId] }
+            : ev
+        );
+      }
+      return { ...state, payments: [...state.payments, payment], events };
     }
     default:
       return state;

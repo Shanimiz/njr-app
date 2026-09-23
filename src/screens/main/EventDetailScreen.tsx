@@ -28,6 +28,17 @@ export function EventDetailScreen({ route, navigation }: Props) {
   const hostRole = getRole(event.hostUserId, event.chapterId);
   const isGoing = event.goingUserIds.includes(currentUserId);
   const thread = eventMessages.filter((m) => m.eventId === event.id);
+
+  // EventDetail is nested EventsStack -> tab navigator -> root stack, and
+  // the Payment modal lives at the root, so two getParent() hops are needed
+  // to reach it (same pattern as the DMs button on EventsFeedScreen).
+  const openPayment = (mode: 'pay' | 'tip') => {
+    const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
+      | (typeof navigation & { navigate: (screen: 'Payment', params: { eventId: string; mode: 'pay' | 'tip' }) => void })
+      | undefined;
+    rootNav?.navigate('Payment', { eventId: event.id, mode });
+  };
+
   const dateLabel = new Date(event.dateISO).toLocaleString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -73,7 +84,9 @@ export function EventDetailScreen({ route, navigation }: Props) {
                 <Text style={styles.tipTitle}>THIS RUN IS FREE</Text>
                 {event.tipsEnabled ? <Text style={styles.tipSubtitle}>Tips for the coffee fund welcome</Text> : null}
               </View>
-              {event.tipsEnabled ? <PillButton label="TIP" variant="gold" style={{ paddingVertical: 8, paddingHorizontal: 16 }} /> : null}
+              {event.tipsEnabled ? (
+                <PillButton label="TIP" variant="gold" style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => openPayment('tip')} />
+              ) : null}
             </View>
           ) : (
             <View style={styles.tipCard}>
@@ -81,7 +94,7 @@ export function EventDetailScreen({ route, navigation }: Props) {
                 <Text style={styles.tipTitle}>${(event.priceCents / 100).toFixed(0)} TO REGISTER</Text>
                 {event.capacity ? <Text style={styles.tipSubtitle}>{event.capacity - event.goingUserIds.length} spots left</Text> : null}
               </View>
-              <PillButton label="REGISTER" variant="gold" style={{ paddingVertical: 8, paddingHorizontal: 16 }} />
+              <PillButton label="REGISTER" variant="gold" style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => openPayment('pay')} />
             </View>
           )}
 

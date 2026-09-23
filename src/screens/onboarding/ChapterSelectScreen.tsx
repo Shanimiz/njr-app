@@ -1,18 +1,25 @@
 import React from 'react';
 import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { PillButton } from '@/components/PillButton';
 import { colors, fonts, radii, spacing } from '@/theme';
 import { useApp } from '@/context/AppContext';
+import type { RootStackParamList } from '@/navigation/types';
 import logo from '../../../assets/logo.png';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'ChapterSelect'>;
 
 /**
  * First screen a new (or logged-out) user sees. Pick one or more chapters —
  * picking more than one is what turns on the in-app city switcher on the
- * Events/Chats tabs later (see EventsFeedScreen).
+ * Events/Chats tabs later (see EventsFeedScreen). Chapters the user has no
+ * membership record for at all route through the join form (JoinChapterScreen)
+ * before they can enter the app; chapters they already have a pending or
+ * approved membership for skip straight through.
  */
-export function ChapterSelectScreen() {
-  const { chapters, selectedChapterIds, dispatch } = useApp();
+export function ChapterSelectScreen({ navigation }: Props) {
+  const { chapters, selectedChapterIds, memberships, currentUserId, dispatch } = useApp();
 
   const toggle = (chapterId: string) => dispatch({ type: 'TOGGLE_CHAPTER_SELECTION', chapterId });
   const continueLabel =
@@ -20,11 +27,25 @@ export function ChapterSelectScreen() {
       ? 'Select a chapter to continue'
       : `CONTINUE — ${selectedChapterIds.length} ${selectedChapterIds.length === 1 ? 'CITY' : 'CITIES'}`;
 
+  const handleContinue = () => {
+    const chapterNeedingJoin = selectedChapterIds.find(
+      (id) => !memberships.some((m) => m.userId === currentUserId && m.chapterId === id)
+    );
+    if (chapterNeedingJoin) {
+      navigation.navigate('JoinChapter', { chapterId: chapterNeedingJoin });
+    } else {
+      dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
+    }
+  };
+
   return (
     <Screen edges={['top', 'bottom']}>
-      <View style={styles.hero}>
-        <Image source={logo} style={styles.logo} />
-        <Text style={styles.heroTitle}>PICK YOUR CITY</Text>
+      <View style={styles.heroWrap}>
+        <View style={styles.hero}>
+          <Image source={logo} style={styles.logo} />
+          <Text style={styles.heroTitle}>PICK YOUR CITY</Text>
+        </View>
+        <View style={styles.heroAngle} />
       </View>
 
       <FlatList
@@ -67,7 +88,7 @@ export function ChapterSelectScreen() {
           variant="navy"
           fullWidth
           disabled={selectedChapterIds.length === 0}
-          onPress={() => dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' })}
+          onPress={handleContinue}
         />
       </View>
     </Screen>
@@ -75,14 +96,24 @@ export function ChapterSelectScreen() {
 }
 
 const styles = StyleSheet.create({
+  // The angled navy hero is the Bold & Sporty signature — a rotated white
+  // rectangle overlapping the bottom edge fakes the diagonal cut from the
+  // wireframes without needing an SVG library.
+  heroWrap: { backgroundColor: colors.navy, overflow: 'hidden' },
   hero: {
-    backgroundColor: colors.navy,
     paddingTop: 24,
-    paddingBottom: 36,
+    paddingBottom: 56,
     alignItems: 'center',
     gap: 10,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+  },
+  heroAngle: {
+    position: 'absolute',
+    left: -24,
+    right: -24,
+    bottom: -20,
+    height: 44,
+    backgroundColor: colors.white,
+    transform: [{ rotate: '-2.5deg' }],
   },
   logo: { width: 64, height: 64, borderRadius: 32 },
   heroTitle: { fontFamily: fonts.display, fontSize: 32, color: colors.white, letterSpacing: 0.5 },

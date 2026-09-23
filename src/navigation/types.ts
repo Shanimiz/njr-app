@@ -3,6 +3,7 @@ export type RootStackParamList = {
   JoinChapter: { chapterId: string };
   Main: undefined;
   DirectMessages: undefined;
+  Payment: { eventId: string; mode: 'pay' | 'tip' };
 };
 
 export type MainTabParamList = {

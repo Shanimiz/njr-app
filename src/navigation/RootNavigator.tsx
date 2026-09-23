@@ -7,6 +7,7 @@ import { ChapterSelectScreen } from '@/screens/onboarding/ChapterSelectScreen';
 import { JoinChapterScreen } from '@/screens/onboarding/JoinChapterScreen';
 import { MainTabs } from './MainTabs';
 import { DirectMessagesScreen } from '@/screens/main/DirectMessagesScreen';
+import { PaymentScreen } from '@/screens/main/PaymentScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -18,12 +19,16 @@ export function RootNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!hasChosenChapter ? (
-          <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
+          <>
+            <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
+            <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
+          </>
         ) : (
           <>
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
             <Stack.Screen name="DirectMessages" component={DirectMessagesScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="Payment" component={PaymentScreen} options={{ presentation: 'modal' }} />
           </>
         )}
       </Stack.Navigator>

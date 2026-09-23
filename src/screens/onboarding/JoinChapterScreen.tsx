@@ -20,7 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'JoinChapter'>;
  * club decides to turn it on.
  */
 export function JoinChapterScreen({ route, navigation }: Props) {
-  const { chapters, currentUser } = useApp();
+  const { chapters, currentUser, currentUserId, selectedChapterIds, memberships, dispatch } = useApp();
   const chapter = chapters.find((c) => c.id === route.params.chapterId);
 
   const [fullName, setFullName] = useState(currentUser.fullName);
@@ -32,6 +32,28 @@ export function JoinChapterScreen({ route, navigation }: Props) {
   const [bio, setBio] = useState('');
 
   if (!chapter) return null;
+
+  const canSubmit = !!(fullName.trim() && phone.trim() && emergencyName.trim() && emergencyPhone.trim() && safetyAnswer.trim());
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    dispatch({
+      type: 'SUBMIT_JOIN_REQUEST',
+      chapterId: chapter.id,
+      profile: { fullName, phone, emergencyContactName: emergencyName, emergencyContactPhone: emergencyPhone, instagramHandle: instagram, safetyAnswer, bio },
+    });
+    // If onboarding covers more than one chapter (multi-city selection),
+    // chain straight into the next one that still needs an application
+    // rather than bouncing back to the picker.
+    const stillNeeds = selectedChapterIds.find(
+      (id) => id !== chapter.id && !memberships.some((m) => m.userId === currentUserId && m.chapterId === id)
+    );
+    if (stillNeeds) {
+      navigation.replace('JoinChapter', { chapterId: stillNeeds });
+    } else {
+      dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
+    }
+  };
 
   const feeLabel =
     chapter.currency === 'USD' ? `$${(chapter.membershipFeeCents / 100).toFixed(0)}/mo` : `₪${(chapter.membershipFeeCents / 100).toFixed(0)}/mo`;
@@ -77,7 +99,8 @@ export function JoinChapterScreen({ route, navigation }: Props) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <PillButton label="SEND REQUEST TO JOIN" fullWidth onPress={() => navigation.goBack()} />
+        <PillButton label="SEND REQUEST TO JOIN" fullWidth disabled={!canSubmit} onPress={handleSubmit} />
+        {!canSubmit ? <Text style={styles.requiredHint}>Fill in your name, phone, emergency contact, and the verification question to continue.</Text> : null}
       </View>
     </Screen>
   );
@@ -119,5 +142,6 @@ const styles = StyleSheet.create({
   membershipFee: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.navy },
   membershipCopy: { fontFamily: fonts.bodyRegular, fontSize: 11, color: colors.navy },
   skipLink: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.navy },
-  footer: { padding: spacing.lg, paddingBottom: spacing.xl },
+  footer: { padding: spacing.lg, paddingBottom: spacing.xl, gap: 8 },
+  requiredHint: { fontFamily: fonts.bodyRegular, fontSize: 11, color: colors.muted, textAlign: 'center' },
 });
