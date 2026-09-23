@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { PillButton } from '@/components/PillButton';
@@ -67,16 +67,16 @@ export function JoinChapterScreen({ route, navigation }: Props) {
     <Screen>
       <View style={styles.headerWrap}>
         <View style={styles.header}>
-          <Text onPress={() => navigation.goBack()} style={styles.back}>
-            ← BACK
-          </Text>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backTap}>
+            <Text style={styles.back}>← BACK</Text>
+          </Pressable>
           <Text style={styles.title}>JOIN {chapter.name.toUpperCase()}</Text>
           <Text style={styles.subtitle}>Goes to a chapter admin for approval</Text>
         </View>
         <View style={styles.headerAngle} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.form}>
+      <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
         <Section title="YOUR DETAILS" />
         <Field label="Full name" value={fullName} onChangeText={setFullName} />
         <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
   headerWrap: { backgroundColor: colors.navy, overflow: 'hidden' },
   header: { paddingTop: 16, paddingBottom: 30, paddingHorizontal: spacing.lg },
   headerAngle: { position: 'absolute', left: -24, right: -24, bottom: -18, height: 40, backgroundColor: colors.white, transform: [{ rotate: '-2.5deg' }] },
+  backTap: { alignSelf: 'flex-start' },
   back: { color: colors.white, fontFamily: fonts.bodyBold, fontSize: 12 },
   title: { color: colors.white, fontFamily: fonts.display, fontSize: 26, marginTop: 8, letterSpacing: 0.4 },
   subtitle: { color: colors.border, fontFamily: fonts.bodyRegular, fontSize: 11, marginTop: 2 },
