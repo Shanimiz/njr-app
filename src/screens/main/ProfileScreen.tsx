@@ -47,6 +47,13 @@ export function ProfileScreen({ navigation }: Props) {
     rootNav?.navigate('ManageRequests');
   };
 
+  const openPaymentMethod = () => {
+    const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
+      | (typeof navigation & { navigate: (screen: 'PaymentMethod') => void })
+      | undefined;
+    rootNav?.navigate('PaymentMethod');
+  };
+
   // Testing-only — see GRANT_MANAGER_ACCESS in AppContext. Gives this
   // device CEO (owner-tier) access to NYC (the chapter with the most seed
   // data) so the approval flow AND role management can be tested without a
@@ -84,6 +91,9 @@ export function ProfileScreen({ navigation }: Props) {
 
           <Pressable onPress={openEditProfile} hitSlop={8} style={styles.editProfileTap}>
             <Text style={styles.editProfileLink}>✏️ Edit photo & bio</Text>
+          </Pressable>
+          <Pressable onPress={openPaymentMethod} hitSlop={8} style={styles.editProfileTap}>
+            <Text style={styles.editProfileLink}>💳 Payment method</Text>
           </Pressable>
 
           <View style={styles.statsRow}>

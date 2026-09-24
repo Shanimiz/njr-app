@@ -5,6 +5,7 @@ import type { MainTabParamList } from './types';
 import { colors, fonts } from '@/theme';
 import { EventsStack } from './EventsStack';
 import { ChatsStack } from './ChatsStack';
+import { MoreStack } from './MoreStack';
 import { BenefitsScreen } from '@/screens/main/BenefitsScreen';
 import { ProfileScreen } from '@/screens/main/ProfileScreen';
 
@@ -14,6 +15,7 @@ const ICONS: Record<keyof MainTabParamList, string> = {
   EventsTab: '🏃',
   ChatsTab: '💬',
   BenefitsTab: '🎁',
+  MoreTab: '☰',
   ProfileTab: '👤',
 };
 
@@ -21,6 +23,7 @@ const LABELS: Record<keyof MainTabParamList, string> = {
   EventsTab: 'EVENTS',
   ChatsTab: 'CHATS',
   BenefitsTab: 'PERKS',
+  MoreTab: 'MORE',
   ProfileTab: 'YOU',
 };
 
@@ -45,6 +48,7 @@ export function MainTabs() {
       <Tab.Screen name="EventsTab" component={EventsStack} />
       <Tab.Screen name="ChatsTab" component={ChatsStack} />
       <Tab.Screen name="BenefitsTab" component={BenefitsScreen} />
+      <Tab.Screen name="MoreTab" component={MoreStack} />
       <Tab.Screen name="ProfileTab" component={ProfileScreen} />
     </Tab.Navigator>
   );

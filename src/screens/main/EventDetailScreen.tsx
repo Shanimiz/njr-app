@@ -40,6 +40,13 @@ export function EventDetailScreen({ route, navigation }: Props) {
     rootNav?.navigate('Payment', { eventId: event.id, mode });
   };
 
+  const openProfile = (userId: string) => {
+    const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
+      | (typeof navigation & { navigate: (screen: 'UserProfile', params: { userId: string }) => void })
+      | undefined;
+    rootNav?.navigate('UserProfile', { userId });
+  };
+
   const dateLabel = new Date(event.dateISO).toLocaleString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -71,11 +78,11 @@ export function EventDetailScreen({ route, navigation }: Props) {
           <Text style={styles.title}>{event.title.toUpperCase()}</Text>
           <Text style={styles.location}>{event.location}</Text>
 
-          <View style={styles.hostRow}>
-            <Avatar size={32} />
+          <Pressable style={styles.hostRow} onPress={() => openProfile(event.hostUserId)}>
+            <Avatar size={32} uri={host.photoUrl} bg={colors.border} />
             <Text style={styles.hostText}>HOSTED BY {host.fullName.toUpperCase()}</Text>
             <RoleBadge role={hostRole} title={hostTitle} />
-          </View>
+          </Pressable>
 
           <Text style={styles.description}>{event.description}</Text>
 
@@ -117,12 +124,14 @@ export function EventDetailScreen({ route, navigation }: Props) {
             const authorTitle = getMembership(m.authorId, event.chapterId)?.title;
             return (
               <View key={m.id} style={styles.messageRow}>
-                <Avatar size={28} />
+                <Pressable onPress={() => openProfile(m.authorId)}>
+                  <Avatar size={28} uri={author.photoUrl} bg={colors.border} />
+                </Pressable>
                 <View style={{ flex: 1 }}>
-                  <View style={styles.messageAuthorRow}>
+                  <Pressable style={styles.messageAuthorRow} onPress={() => openProfile(m.authorId)}>
                     <Text style={styles.messageAuthor}>{author.fullName.toUpperCase()}</Text>
                     <RoleBadge role={authorRole} title={authorTitle} />
-                  </View>
+                  </Pressable>
                   <Text style={styles.messageText}>{m.text}</Text>
                 </View>
               </View>

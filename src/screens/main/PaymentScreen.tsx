@@ -23,7 +23,7 @@ const TIP_PRESETS_CENTS = [300, 500, 1000];
  * charged. The card field below is a static mock, not a real card input.
  */
 export function PaymentScreen({ route, navigation }: Props) {
-  const { events, chapters, dispatch } = useApp();
+  const { events, chapters, cardLast4, dispatch } = useApp();
   const event = events.find((e) => e.id === route.params.eventId);
   const mode = route.params.mode;
 
@@ -68,7 +68,7 @@ export function PaymentScreen({ route, navigation }: Props) {
           <Text style={styles.doneCopy}>
             {mode === 'pay'
               ? `${symbol}${(amountCents / 100).toFixed(2)} paid for ${event.title}. See you on the run!`
-              : `${symbol}${(amountCents / 100).toFixed(2)} sent to the ${event.title} coffee fund.`}
+              : `Thank you for your support of Nice Jewish Runners! Your ${symbol}${(amountCents / 100).toFixed(2)} tip means a lot.`}
           </Text>
           <PillButton label="DONE" fullWidth onPress={() => navigation.goBack()} />
         </View>
@@ -136,13 +136,13 @@ export function PaymentScreen({ route, navigation }: Props) {
         )}
 
         <Text style={styles.sectionLabel}>PAYMENT METHOD</Text>
-        <View style={styles.cardRow}>
+        <Pressable style={styles.cardRow} onPress={() => navigation.navigate('PaymentMethod')}>
           <View style={styles.cardIcon}>
             <Text style={styles.cardIconText}>💳</Text>
           </View>
-          <Text style={styles.cardText}>Card ending in •••• 4242</Text>
+          <Text style={styles.cardText}>Card ending in •••• {cardLast4}</Text>
           <Text style={styles.cardChange}>CHANGE</Text>
-        </View>
+        </Pressable>
         <Text style={styles.disclaimer}>
           Demo build — no card is actually charged yet. This confirms the flow the club asked for; real Stripe billing
           plugs in here next.

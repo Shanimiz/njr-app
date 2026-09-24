@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { PillButton } from '@/components/PillButton';
@@ -37,7 +37,30 @@ export function JoinChapterScreen({ route, navigation }: Props) {
   const canSubmit = !!(fullName.trim() && phone.trim() && emergencyName.trim() && emergencyPhone.trim() && safetyAnswer.trim());
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    // Button is always tappable (not disabled) so an incomplete form gets a
+    // clear, specific popup naming exactly what's missing, rather than just
+    // quietly doing nothing — per Shani, a required-field marker alone
+    // isn't enough on its own.
+    if (!fullName.trim()) {
+      Alert.alert('Missing info', 'Please fill out your name.');
+      return;
+    }
+    if (!phone.trim()) {
+      Alert.alert('Missing info', 'Please fill out your phone number.');
+      return;
+    }
+    if (!emergencyName.trim()) {
+      Alert.alert('Missing info', "Please fill out your emergency contact's name.");
+      return;
+    }
+    if (!emergencyPhone.trim()) {
+      Alert.alert('Missing info', "Please fill out your emergency contact's phone number.");
+      return;
+    }
+    if (!safetyAnswer.trim()) {
+      Alert.alert('Missing info', 'Please answer the verification question.');
+      return;
+    }
     dispatch({
       type: 'SUBMIT_JOIN_REQUEST',
       chapterId: chapter.id,
@@ -67,16 +90,16 @@ export function JoinChapterScreen({ route, navigation }: Props) {
 
       <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
         <Section title="YOUR DETAILS" />
-        <Field label="Full name" value={fullName} onChangeText={setFullName} />
-        <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+        <Field label="Full name" value={fullName} onChangeText={setFullName} required />
+        <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" required />
 
         <Section title="EMERGENCY CONTACT" />
-        <Field label="Name & relationship" value={emergencyName} onChangeText={setEmergencyName} />
-        <Field label="Emergency phone" value={emergencyPhone} onChangeText={setEmergencyPhone} keyboardType="phone-pad" />
+        <Field label="Name & relationship" value={emergencyName} onChangeText={setEmergencyName} required />
+        <Field label="Emergency phone" value={emergencyPhone} onChangeText={setEmergencyPhone} keyboardType="phone-pad" required />
 
         <Section title="VERIFICATION" />
         <Field label="Instagram / social handle" value={instagram} onChangeText={setInstagram} autoCapitalize="none" />
-        <Field label="What's your favorite Jewish holiday?" value={safetyAnswer} onChangeText={setSafetyAnswer} />
+        <Field label="What's your favorite Jewish holiday?" value={safetyAnswer} onChangeText={setSafetyAnswer} required />
 
         {chapter.membershipEnabled ? (
           <View style={styles.membershipCard}>
@@ -93,8 +116,12 @@ export function JoinChapterScreen({ route, navigation }: Props) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <PillButton label="SEND REQUEST TO JOIN" fullWidth disabled={!canSubmit} onPress={handleSubmit} />
-        {!canSubmit ? <Text style={styles.requiredHint}>Fill in your name, phone, emergency contact, and the verification question to continue.</Text> : null}
+        <PillButton label="SEND REQUEST TO JOIN" fullWidth onPress={handleSubmit} />
+        {!canSubmit ? (
+          <Text style={styles.requiredHint}>
+            <Text style={styles.requiredStar}>*</Text> Required fields — fill those in to send your request.
+          </Text>
+        ) : null}
       </View>
     </Screen>
   );
@@ -104,10 +131,21 @@ function Section({ title }: { title: string }) {
   return <Text style={styles.section}>{title}</Text>;
 }
 
-function Field(props: { label: string; value: string; onChangeText: (v: string) => void; keyboardType?: 'phone-pad' | 'default'; autoCapitalize?: 'none' | 'sentences'; multiline?: boolean }) {
+function Field(props: {
+  label: string;
+  value: string;
+  onChangeText: (v: string) => void;
+  keyboardType?: 'phone-pad' | 'default';
+  autoCapitalize?: 'none' | 'sentences';
+  multiline?: boolean;
+  required?: boolean;
+}) {
   return (
     <View style={styles.fieldWrap}>
-      <Text style={styles.fieldLabel}>{props.label}</Text>
+      <Text style={styles.fieldLabel}>
+        {props.label}
+        {props.required ? <Text style={styles.requiredStar}> *</Text> : null}
+      </Text>
       <TextInput
         value={props.value}
         onChangeText={props.onChangeText}
@@ -134,6 +172,7 @@ const styles = StyleSheet.create({
   section: { fontFamily: fonts.display, fontSize: 14, letterSpacing: 0.6, color: colors.gold, marginTop: 10 },
   fieldWrap: { backgroundColor: colors.bgLight, borderRadius: radii.md, padding: 12 },
   fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.mutedLight, letterSpacing: 0.4 },
+  requiredStar: { color: colors.danger, fontFamily: fonts.bodyBold },
   fieldInput: { fontFamily: fonts.bodySemibold, fontSize: 14, color: colors.navy, marginTop: 2, padding: 0 },
   membershipCard: { backgroundColor: colors.gold, borderRadius: radii.lg, padding: 14, marginTop: 10, gap: 6 },
   membershipRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

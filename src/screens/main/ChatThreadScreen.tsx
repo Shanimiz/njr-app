@@ -20,12 +20,22 @@ type Props = NativeStackScreenProps<ChatsStackParamList, 'ChatThread'>;
  * decide whether the composer is live or replaced with the "only admins
  * can post" bar, and whether the ⋯ delete menu shows on each message).
  */
-export function ChatThreadScreen({ route }: Props) {
+export function ChatThreadScreen({ route, navigation }: Props) {
   const { chatChannels, chatMessages, users, activeChapter, getRole, getMembership, currentUserId, dispatch } = useApp();
   const [draft, setDraft] = useState('');
 
   const channel = chatChannels.find((c) => c.id === route.params.channelId);
   if (!channel || !activeChapter) return null;
+
+  // ChatThread is nested ChatsStack -> tab navigator -> root stack, where
+  // UserProfile lives — same two-hop pattern used elsewhere for reaching a
+  // root-level screen from inside a tab's own stack.
+  const openProfile = (userId: string) => {
+    const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
+      | (typeof navigation & { navigate: (screen: 'UserProfile', params: { userId: string }) => void })
+      | undefined;
+    rootNav?.navigate('UserProfile', { userId });
+  };
 
   const isJoined = channel.memberUserIds.includes(currentUserId);
   const role = getRole(currentUserId, activeChapter.id);
@@ -62,12 +72,12 @@ export function ChatThreadScreen({ route }: Props) {
         {isJoined && members.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.memberRow}>
             {members.map((m) => (
-              <View key={m.id} style={styles.memberChip}>
+              <Pressable key={m.id} style={styles.memberChip} onPress={() => openProfile(m.id)}>
                 <Avatar size={22} uri={m.photoUrl} bg={colors.border} />
                 <Text style={styles.memberChipText} numberOfLines={1}>
                   {m.fullName.split(' ')[0] || '(unnamed)'}
                 </Text>
-              </View>
+              </Pressable>
             ))}
           </ScrollView>
         ) : null}
@@ -103,12 +113,12 @@ export function ChatThreadScreen({ route }: Props) {
                 <View key={m.id} style={[styles.bubble, isPinnedStyle ? styles.bubbleHighlight : styles.bubbleNormal]}>
                   {m.pinned ? <Text style={styles.pinnedLabel}>📌 PINNED</Text> : null}
                   <View style={styles.bubbleHeader}>
-                    <View style={styles.authorRow}>
+                    <Pressable style={styles.authorRow} onPress={() => openProfile(m.authorId)}>
                       <Text style={[styles.author, { color: isPinnedStyle ? colors.white : colors.navy }]}>
                         {author.fullName.toUpperCase()}
                       </Text>
                       <RoleBadge role={authorRole} title={authorTitle} />
-                    </View>
+                    </Pressable>
                     {canModerate ? (
                       <Pressable
                         hitSlop={10}

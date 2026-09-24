@@ -49,14 +49,14 @@ export function DirectMessagesScreen({ navigation }: Props) {
           const otherId = item.participantIds.find((id) => id !== currentUserId)!;
           const other = users[otherId];
           return (
-            <Pressable style={styles.row}>
-              <Avatar size={44} />
+            <Pressable style={styles.row} onPress={() => navigation.navigate('DMThread', { threadId: item.id })}>
+              <Avatar size={44} uri={other.photoUrl} bg={colors.border} />
               <View style={{ flex: 1 }}>
                 <View style={styles.rowNameLine}>
                   <Text style={styles.rowName}>{other.fullName.toUpperCase()}</Text>
                   <RoleBadge role={roleFor(otherId)} />
                 </View>
-                <Text style={styles.rowPreview} numberOfLines={1}>{item.lastMessageText}</Text>
+                <Text style={styles.rowPreview} numberOfLines={1}>{item.lastMessageText || 'No messages yet'}</Text>
               </View>
             </Pressable>
           );

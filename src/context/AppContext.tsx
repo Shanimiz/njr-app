@@ -26,6 +26,7 @@ import type {
   RunEvent,
   UserProfile,
 } from '@/types';
+import { newDMThreadId } from '@/lib/dm';
 
 interface AppState {
   currentUserId: string;
@@ -39,6 +40,10 @@ interface AppState {
   dmThreads: DMThread[];
   dmMessages: DMMessage[];
   payments: PaymentRecord[];
+  /** Mock card-on-file, last 4 digits only — see PaymentMethodScreen. No
+   * real card number is ever stored; this is just enough to render "Card
+   * ending in ••••" consistently across PaymentScreen. */
+  cardLast4: string;
   /** Chapters the signed-in user picked on the chapter-select screen. Empty
    * until onboarding completes. */
   selectedChapterIds: string[];
@@ -83,6 +88,11 @@ type Action =
   | { type: 'DELETE_CHAT_MESSAGE'; messageId: string }
   | { type: 'TOGGLE_PIN_MESSAGE'; messageId: string }
   | { type: 'SEND_DM'; threadId: string; text: string }
+  /** Only dispatched when no thread with this person exists yet — see
+   * AppContext's getOrCreateDMThreadId, which checks first and reuses an
+   * existing thread's real id (e.g. seed data's "dm_ron") whenever one is
+   * found, rather than always minting a fresh one. */
+  | { type: 'CREATE_DM_THREAD'; threadId: string; otherUserId: string }
   | {
       type: 'SUBMIT_JOIN_REQUEST';
       chapterId: string;
@@ -137,7 +147,10 @@ type Action =
       priceCents: number;
       capacity?: number;
       coverImageUrl?: string;
-    };
+    }
+  /** "Change" on PaymentScreen's card row, or the Profile tab's payment
+   * method link — mock only, see cardLast4 above. */
+  | { type: 'UPDATE_CARD'; last4: string };
 
 const initialState: AppState = {
   currentUserId,
@@ -151,6 +164,7 @@ const initialState: AppState = {
   dmThreads: seedDmThreads,
   dmMessages: seedDmMessages,
   payments: [],
+  cardLast4: '4242',
   // A real signed-in user starts having picked nothing yet — the app opens
   // on the chapter-select screen. See RootNavigator for how this gates
   // navigation.
@@ -217,6 +231,21 @@ function reducer(state: AppState, action: Action): AppState {
       );
       return { ...state, dmMessages: [...state.dmMessages, message], dmThreads };
     }
+    case 'CREATE_DM_THREAD': {
+      // Idempotency guard, mirroring JOIN_CHAT_CHANNEL — getOrCreateDMThreadId
+      // already checks for an existing thread before dispatching this, but a
+      // double-tap on "Send DM" shouldn't be able to create two threads.
+      if (state.dmThreads.some((t) => t.id === action.threadId)) return state;
+      const thread: DMThread = {
+        id: action.threadId,
+        participantIds: [state.currentUserId, action.otherUserId],
+        lastMessageText: '',
+        lastMessageAt: new Date().toISOString(),
+      };
+      return { ...state, dmThreads: [...state.dmThreads, thread] };
+    }
+    case 'UPDATE_CARD':
+      return { ...state, cardLast4: action.last4 };
     case 'SUBMIT_JOIN_REQUEST': {
       const existingUser = state.users[state.currentUserId];
       const users = {
@@ -418,6 +447,13 @@ interface AppContextValue extends AppState {
   activeChapter: Chapter | null;
   getMembership: (userId: string, chapterId: string) => Membership | undefined;
   getRole: (userId: string, chapterId: string) => ChapterRole | null;
+  /** "Send DM" from anywhere (a profile, a chat member chip, an event host)
+   * funnels through this: reuses the existing thread with that person if
+   * one's already there (any id — seed data's ids don't follow a pattern),
+   * otherwise mints a new one and dispatches CREATE_DM_THREAD for it. Either
+   * way, returns the id to navigate to immediately — safe because the
+   * reducer's own CREATE_DM_THREAD guard makes a duplicate dispatch harmless. */
+  getOrCreateDMThreadId: (otherUserId: string) => string;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -474,6 +510,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [state.chapters, state.activeChapterId]
   );
 
+  const getOrCreateDMThreadId = useCallback(
+    (otherUserId: string): string => {
+      const existing = state.dmThreads.find(
+        (t) => t.participantIds.includes(state.currentUserId) && t.participantIds.includes(otherUserId)
+      );
+      if (existing) return existing.id;
+      const threadId = newDMThreadId(state.currentUserId, otherUserId);
+      dispatch({ type: 'CREATE_DM_THREAD', threadId, otherUserId });
+      return threadId;
+    },
+    [state.dmThreads, state.currentUserId]
+  );
+
   const value: AppContextValue = {
     ...state,
     dispatch,
@@ -482,6 +531,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     activeChapter,
     getMembership,
     getRole,
+    getOrCreateDMThreadId,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

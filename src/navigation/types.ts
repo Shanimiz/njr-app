@@ -7,7 +7,17 @@ export type RootStackParamList = {
   CompleteProfile: { editMode?: boolean } | undefined;
   Main: undefined;
   DirectMessages: undefined;
+  // One specific DM conversation — reads currentUserId + participants from
+  // the thread itself via context, so only the thread id is needed here.
+  DMThread: { threadId: string };
+  // Anyone's public profile — event hosts, chat members, chapter roster,
+  // wherever a name/avatar is tappable. Reachable from every tab, so it
+  // lives at the root like DirectMessages/Payment rather than in one stack.
+  UserProfile: { userId: string };
   Payment: { eventId: string; mode: 'pay' | 'tip' };
+  // The "CHANGE" link on Payment, and the Profile tab's own settings link,
+  // both open this — reads/writes the mock card-on-file in context.
+  PaymentMethod: undefined;
   // Reads the manager's activeChapter from context — no params needed.
   ManageRequests: undefined;
 };
@@ -16,6 +26,7 @@ export type MainTabParamList = {
   EventsTab: undefined;
   ChatsTab: undefined;
   BenefitsTab: undefined;
+  MoreTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -29,4 +40,14 @@ export type ChatsStackParamList = {
   ChatsList: undefined;
   ChatThread: { channelId: string };
   CreateChat: undefined;
+};
+
+/** The 5th tab, added to hold pages that don't need their own dedicated
+ * spot in the bottom bar: chapter Messages (the DM inbox) and Members live
+ * one tap away here instead of as bottom-tab icons of their own, along with
+ * the Donate to NJR page. */
+export type MoreStackParamList = {
+  MoreMenu: undefined;
+  Members: undefined;
+  Donate: undefined;
 };
