@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { colors, fonts, radii, spacing } from '@/theme';
@@ -27,15 +27,37 @@ export function ChapterSelectScreen({ navigation }: Props) {
   const { chapters, memberships, currentUserId, dispatch } = useApp();
   const [query, setQuery] = useState('');
 
+  const myMembership = (chapterId: string) => memberships.find((m) => m.userId === currentUserId && m.chapterId === chapterId);
+  // Whether tapping this chapter should drop the member straight in. There's
+  // no admin approval screen yet (deferred — see the club's request list),
+  // so a 'pending' request can never actually become 'approved' from inside
+  // this app right now; treating only 'approved' as enterable would leave
+  // every chapter permanently stuck behind a request no one can act on. For
+  // now, a pending request still gets you in (clearly labeled as pending,
+  // not approved, on the card below) so the rest of the app stays testable;
+  // this should switch to approved-only once the admin approval flow exists.
+  const isMember = (chapterId: string) => !!myMembership(chapterId);
+
   const filteredChapters = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return chapters;
+    if (!q) {
+      // Nothing searched yet — only show chapters already joined (any
+      // request status), so this doesn't turn into a long scroll of every
+      // city in the club just to get back into your own. Search reveals
+      // everything else.
+      return chapters.filter((c) => isMember(c.id));
+    }
     return chapters.filter((c) => c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q));
-  }, [chapters, query]);
-
-  const isMember = (chapterId: string) => memberships.some((m) => m.userId === currentUserId && m.chapterId === chapterId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapters, query, memberships, currentUserId]);
 
   const handleChapterPress = (chapterId: string) => {
+    // TEMPORARY DEBUG — pinpointing why taps on this screen aren't
+    // registering. Remove once that's found. If this alert never shows up
+    // when tapping a card, the tap isn't reaching this handler at all (a
+    // layout/touch problem); if it does show up, the problem is somewhere
+    // after this line.
+    Alert.alert('DEBUG', `Tap registered for chapter: ${chapterId}\nalready member: ${isMember(chapterId)}`);
     if (isMember(chapterId)) {
       dispatch({ type: 'ENTER_CHAPTER', chapterId });
       // Only true when this screen was pushed on top of the main app (the
@@ -82,28 +104,38 @@ export function ChapterSelectScreen({ navigation }: Props) {
         keyExtractor={(c) => c.id}
         contentContainerStyle={styles.list}
         keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={<Text style={styles.empty}>No chapters match “{query}”.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.empty}>
+            {query.trim() ? `No chapters match “${query}”.` : 'Search above to find your chapter and request to join.'}
+          </Text>
+        }
         renderItem={({ item }) => {
           const disabled = !!item.comingSoon;
-          const member = !disabled && isMember(item.id);
+          const membership = !disabled ? myMembership(item.id) : undefined;
+          const approved = membership?.status === 'approved';
+          const pending = membership?.status === 'pending';
           const subtitle = item.comingSoon
             ? 'COMING SOON'
-            : member
+            : approved
             ? "✓ YOU'RE IN — TAP TO ENTER"
+            : pending
+            ? '⏳ REQUEST PENDING — AWAITING APPROVAL'
             : `${item.memberCount} RUNNERS · TAP TO REQUEST TO JOIN`;
+          const cardBg = disabled ? colors.bgLight : approved ? colors.gold : pending ? colors.goldTint : colors.bgLight;
+          const textColor = approved ? colors.navy : pending ? colors.goldDeep : colors.muted;
           return (
             <Pressable
               disabled={disabled}
               onPress={() => handleChapterPress(item.id)}
-              style={[styles.card, { backgroundColor: disabled ? colors.bgLight : member ? colors.gold : colors.bgLight, opacity: disabled ? 0.6 : 1 }]}
+              style={[styles.card, { backgroundColor: cardBg, opacity: disabled ? 0.6 : 1 }, pending ? styles.cardPendingBorder : null]}
             >
               <View>
                 <Text style={styles.cardTitle}>
                   {item.emoji} {item.name.toUpperCase()}
                 </Text>
-                <Text style={[styles.cardSubtitle, { color: member ? colors.navy : colors.muted }]}>{subtitle}</Text>
+                <Text style={[styles.cardSubtitle, { color: textColor }]}>{subtitle}</Text>
               </View>
-              {member ? (
+              {approved ? (
                 <View style={styles.check}>
                   <Text style={styles.checkText}>✓</Text>
                 </View>
@@ -159,6 +191,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  cardPendingBorder: { borderWidth: 1.5, borderColor: colors.goldTintBorder },
   cardTitle: { fontFamily: fonts.display, fontSize: 22, letterSpacing: 0.4, color: colors.navy },
   cardSubtitle: { fontFamily: fonts.bodyBold, fontSize: 11, letterSpacing: 0.6, marginTop: 2 },
   check: {

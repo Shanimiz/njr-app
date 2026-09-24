@@ -14,14 +14,16 @@ import { useApp } from '@/context/AppContext';
  * every chosen chapter has a join request in — not per chapter, since a
  * profile is shared across all of a member's chapters.
  *
- * Uses the device's real camera or photo library via expo-image-picker. An
- * earlier version of this screen used a fixed emoji-avatar grid instead —
- * this package wasn't installing cleanly in the Codespaces environment this
- * was first being tested from. If real photo upload ever needs to be
- * swapped back out again, everywhere else (Avatar, ProfileScreen, app
- * state) already just renders whatever string is in `photoUrl`, image URI
- * or otherwise, via src/components/Avatar.tsx — only this one screen would
- * need to change.
+ * Uses the device's real camera or photo library via expo-image-picker.
+ * This failed to install cleanly the first time it was tried in this
+ * Codespace ("Unable to resolve module ../../../expo" deep inside the
+ * package) — root cause turned out to be this project's own
+ * babel.config.js, not the package: the module-resolver plugin's `root`
+ * was set to the whole project folder, which meant it was also processing
+ * expo-image-picker's own source as Metro transformed it (several Expo
+ * packages ship raw TypeScript that Metro compiles on the fly) and
+ * mangling its internal imports. Narrowed to `root: ['./src']` — see
+ * babel.config.js — since `@` never needs to resolve outside there anyway.
  */
 export function CompleteProfileScreen() {
   const { dispatch } = useApp();

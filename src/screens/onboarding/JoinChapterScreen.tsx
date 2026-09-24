@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { PillButton } from '@/components/PillButton';
@@ -71,7 +71,17 @@ export function JoinChapterScreen({ route, navigation }: Props) {
     <Screen>
       <View style={styles.headerWrap}>
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backTap}>
+          <Pressable
+            onPress={() => {
+              // TEMPORARY DEBUG — same diagnostic as ChapterSelectScreen's
+              // cards, for the back button here. Remove once the cause is
+              // found.
+              Alert.alert('DEBUG', 'Back button tap registered on JoinChapterScreen');
+              navigation.goBack();
+            }}
+            hitSlop={12}
+            style={styles.backTap}
+          >
             <Text style={styles.back}>← BACK</Text>
           </Pressable>
           <Text style={styles.title}>JOIN {chapter.name.toUpperCase()}</Text>
