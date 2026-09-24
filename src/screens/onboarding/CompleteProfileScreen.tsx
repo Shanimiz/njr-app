@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { Avatar } from '@/components/Avatar';
 import { PillButton } from '@/components/PillButton';
 import { colors, fonts, radii, spacing } from '@/theme';
 import { useApp } from '@/context/AppContext';
+import type { RootStackParamList } from '@/navigation/types';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'CompleteProfile'>;
 
 /**
  * Last onboarding step, per the brief: "after they fill this out they have
@@ -24,11 +28,17 @@ import { useApp } from '@/context/AppContext';
  * packages ship raw TypeScript that Metro compiles on the fly) and
  * mangling its internal imports. Narrowed to `root: ['./src']` — see
  * babel.config.js — since `@` never needs to resolve outside there anyway.
+ *
+ * Also reachable later, after onboarding, via "Edit photo & bio" on the
+ * Profile tab (passes { editMode: true }) — same screen, prefilled with
+ * whatever's already on the profile, but Finish saves and goes back to
+ * Profile instead of trying to (re-)enter onboarding.
  */
-export function CompleteProfileScreen() {
-  const { dispatch } = useApp();
-  const [photoUri, setPhotoUri] = useState<string | undefined>(undefined);
-  const [bio, setBio] = useState('');
+export function CompleteProfileScreen({ route, navigation }: Props) {
+  const { currentUser, dispatch } = useApp();
+  const editMode = !!route.params?.editMode;
+  const [photoUri, setPhotoUri] = useState<string | undefined>(currentUser.photoUrl);
+  const [bio, setBio] = useState(currentUser.bio ?? '');
 
   const canFinish = !!photoUri && bio.trim().length > 0;
 
@@ -64,15 +74,26 @@ export function CompleteProfileScreen() {
   const handleFinish = () => {
     if (!canFinish || !photoUri) return;
     dispatch({ type: 'COMPLETE_PROFILE', photoUrl: photoUri, bio: bio.trim() });
-    dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
+    if (editMode) {
+      navigation.goBack();
+    } else {
+      dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
+    }
   };
 
   return (
     <Screen>
       <View style={styles.headerWrap}>
         <View style={styles.header}>
-          <Text style={styles.title}>SET UP YOUR PROFILE</Text>
-          <Text style={styles.subtitle}>So other runners recognize you at the start line</Text>
+          {editMode ? (
+            <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backTap}>
+              <Text style={styles.back}>← BACK</Text>
+            </Pressable>
+          ) : null}
+          <Text style={styles.title}>{editMode ? 'EDIT YOUR PROFILE' : 'SET UP YOUR PROFILE'}</Text>
+          <Text style={styles.subtitle}>
+            {editMode ? 'Update your photo or bio anytime' : 'So other runners recognize you at the start line'}
+          </Text>
         </View>
         <View style={styles.headerAngle} />
       </View>
@@ -103,7 +124,13 @@ export function CompleteProfileScreen() {
       </View>
 
       <View style={styles.footer}>
-        <PillButton label="FINISH — ENTER THE APP" variant="gold" fullWidth disabled={!canFinish} onPress={handleFinish} />
+        <PillButton
+          label={editMode ? 'SAVE CHANGES' : 'FINISH — ENTER THE APP'}
+          variant="gold"
+          fullWidth
+          disabled={!canFinish}
+          onPress={handleFinish}
+        />
         {!canFinish ? <Text style={styles.hint}>Add a photo and a short bio to continue.</Text> : null}
       </View>
     </Screen>
@@ -114,6 +141,8 @@ const styles = StyleSheet.create({
   headerWrap: { backgroundColor: colors.navy, overflow: 'hidden' },
   header: { paddingTop: 16, paddingBottom: 30, paddingHorizontal: spacing.lg },
   headerAngle: { position: 'absolute', left: -24, right: -24, bottom: -18, height: 40, backgroundColor: colors.white, transform: [{ rotate: '-2.5deg' }] },
+  backTap: { alignSelf: 'flex-start', marginBottom: 8 },
+  back: { color: colors.white, fontFamily: fonts.bodyBold, fontSize: 12 },
   title: { color: colors.white, fontFamily: fonts.display, fontSize: 26, letterSpacing: 0.4 },
   subtitle: { color: colors.border, fontFamily: fonts.bodyRegular, fontSize: 12, marginTop: 4 },
   body: { flex: 1, padding: spacing.lg, gap: 10 },

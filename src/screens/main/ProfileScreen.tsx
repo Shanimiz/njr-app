@@ -33,6 +33,13 @@ export function ProfileScreen({ navigation }: Props) {
     rootNav?.navigate('ChapterSelect');
   };
 
+  const openEditProfile = () => {
+    const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
+      | (typeof navigation & { navigate: (screen: 'CompleteProfile', params: { editMode: true }) => void })
+      | undefined;
+    rootNav?.navigate('CompleteProfile', { editMode: true });
+  };
+
   const chapterNames = selectedChapters.map((c) => c.city).join(' · ');
   const activeRole = activeChapter ? getRole(currentUserId, activeChapter.id) : null;
   const canViewEmergencyContacts = activeRole ? permissions.canViewEmergencyContacts(activeRole) : false;
@@ -57,6 +64,10 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
           <Text style={styles.chapters}>{chapterNames.toUpperCase()}</Text>
           <Text style={styles.bio}>{currentUser.bio}</Text>
+
+          <Pressable onPress={openEditProfile} hitSlop={8} style={styles.editProfileTap}>
+            <Text style={styles.editProfileLink}>✏️ Edit photo & bio</Text>
+          </Pressable>
 
           <View style={styles.statsRow}>
             <Stat label="RUNS JOINED" value={String(currentUser.runsJoined)} />
@@ -146,6 +157,8 @@ const styles = StyleSheet.create({
   name: { fontFamily: fonts.display, fontSize: 24, color: colors.navy, letterSpacing: 0.3 },
   chapters: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.mutedLight, letterSpacing: 0.4 },
   bio: { fontFamily: fonts.bodyRegular, fontSize: 13, color: colors.muted },
+  editProfileTap: { alignSelf: 'flex-start' },
+  editProfileLink: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.muted, textDecorationLine: 'underline' },
   statsRow: { flexDirection: 'row', gap: 10, marginTop: 6 },
   statCard: { flex: 1, backgroundColor: colors.bgLight, borderRadius: radii.md, padding: 12, alignItems: 'center' },
   statValue: { fontFamily: fonts.display, fontSize: 20, color: colors.navy },

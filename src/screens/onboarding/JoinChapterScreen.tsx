@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { PillButton } from '@/components/PillButton';
@@ -22,7 +22,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'JoinChapter'>;
  * club decides to turn it on.
  */
 export function JoinChapterScreen({ route, navigation }: Props) {
-  const { chapters, currentUser, currentUserId, selectedChapterIds, memberships, dispatch } = useApp();
+  const { chapters, currentUser, dispatch } = useApp();
   const chapter = chapters.find((c) => c.id === route.params.chapterId);
 
   const [fullName, setFullName] = useState(currentUser.fullName);
@@ -37,38 +37,16 @@ export function JoinChapterScreen({ route, navigation }: Props) {
   const canSubmit = !!(fullName.trim() && phone.trim() && emergencyName.trim() && emergencyPhone.trim() && safetyAnswer.trim());
 
   const handleSubmit = () => {
-    // TEMPORARY DEBUG — pinpointing why this button doesn't respond. If
-    // this alert never appears when tapping "SEND REQUEST TO JOIN", the
-    // button is disabled (canSubmit is false — one of the 5 required
-    // fields is still empty) rather than the tap failing to register; if it
-    // does appear, the problem is somewhere after this line. Remove once
-    // the cause is found.
-    Alert.alert('DEBUG', `Submit tap registered. canSubmit: ${canSubmit}`);
     if (!canSubmit) return;
     dispatch({
       type: 'SUBMIT_JOIN_REQUEST',
       chapterId: chapter.id,
       profile: { fullName, phone, emergencyContactName: emergencyName, emergencyContactPhone: emergencyPhone, instagramHandle: instagram, safetyAnswer },
     });
-    // If onboarding covers more than one chapter (multi-city selection),
-    // chain straight into the next one that still needs an application
-    // rather than bouncing back to the picker. Once every chosen chapter
-    // has an application in, a first-time user still needs a photo + bio
-    // (CompleteProfileScreen) before landing in the app.
-    const stillNeeds = selectedChapterIds.find(
-      (id) => id !== chapter.id && !memberships.some((m) => m.userId === currentUserId && m.chapterId === id)
-    );
-    if (stillNeeds) {
-      navigation.replace('JoinChapter', { chapterId: stillNeeds });
-    } else if (!currentUser.photoUrl) {
-      navigation.replace('CompleteProfile');
-    } else {
-      // Already has a profile — this chapter was added on top of an
-      // existing membership (via the "browse chapters" link), not first-time
-      // onboarding, so land directly in the chapter just requested rather
-      // than whichever chapter happened to be active before.
-      dispatch({ type: 'SET_ACTIVE_CHAPTER', chapterId: chapter.id });
-    }
+    // What happens after (chaining to another chapter that still needs an
+    // application, the one-time photo/bio step, or straight into the app)
+    // is decided on RequestSentScreen, once the confirmation has been seen.
+    navigation.replace('RequestSent', { chapterId: chapter.id });
   };
 
   const feeLabel =

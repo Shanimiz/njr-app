@@ -6,6 +6,7 @@ import type { RootStackParamList } from './types';
 import { useApp } from '@/context/AppContext';
 import { ChapterSelectScreen } from '@/screens/onboarding/ChapterSelectScreen';
 import { JoinChapterScreen } from '@/screens/onboarding/JoinChapterScreen';
+import { RequestSentScreen } from '@/screens/onboarding/RequestSentScreen';
 import { CompleteProfileScreen } from '@/screens/onboarding/CompleteProfileScreen';
 import { MainTabs } from './MainTabs';
 import { DirectMessagesScreen } from '@/screens/main/DirectMessagesScreen';
@@ -36,6 +37,7 @@ export function RootNavigator() {
           <>
             <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
             <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
+            <Stack.Screen name="RequestSent" component={RequestSentScreen} />
             <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
           </>
         ) : (
@@ -43,6 +45,7 @@ export function RootNavigator() {
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
             <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
+            <Stack.Screen name="RequestSent" component={RequestSentScreen} />
             <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
             <Stack.Screen name="DirectMessages" component={DirectMessagesScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Payment" component={PaymentScreen} options={{ presentation: 'modal' }} />

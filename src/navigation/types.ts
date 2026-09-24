@@ -1,7 +1,10 @@
 export type RootStackParamList = {
   ChapterSelect: undefined;
   JoinChapter: { chapterId: string };
-  CompleteProfile: undefined;
+  RequestSent: { chapterId: string };
+  // No params = first-time onboarding step. { editMode: true } = reopened
+  // later from the Profile tab to change an existing photo/bio.
+  CompleteProfile: { editMode?: boolean } | undefined;
   Main: undefined;
   DirectMessages: undefined;
   Payment: { eventId: string; mode: 'pay' | 'tip' };
