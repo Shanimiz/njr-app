@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { Avatar } from '@/components/Avatar';
@@ -51,12 +51,21 @@ export function EventDetailScreen({ route, navigation }: Props) {
   return (
     <Screen edges={['top', 'bottom']}>
       <ScrollView>
-        <View style={styles.cover}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backText}>←</Text>
-          </Pressable>
-          <Text style={styles.coverDate}>{dateLabel.toUpperCase()}</Text>
-        </View>
+        {event.coverImageUrl ? (
+          <ImageBackground source={{ uri: event.coverImageUrl }} style={styles.cover}>
+            <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Text style={styles.backText}>←</Text>
+            </Pressable>
+            <Text style={styles.coverDate}>{dateLabel.toUpperCase()}</Text>
+          </ImageBackground>
+        ) : (
+          <View style={styles.cover}>
+            <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Text style={styles.backText}>←</Text>
+            </Pressable>
+            <Text style={styles.coverDate}>{dateLabel.toUpperCase()}</Text>
+          </View>
+        )}
 
         <View style={styles.body}>
           <Text style={styles.title}>{event.title.toUpperCase()}</Text>

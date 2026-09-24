@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -100,9 +100,15 @@ function EventCard({ event, onPress }: { event: RunEvent; onPress: () => void })
   const priceLabel = event.isFree ? 'FREE' : `$${(event.priceCents / 100).toFixed(0)}`;
   return (
     <Pressable onPress={onPress} style={styles.card}>
-      <View style={styles.cardCover}>
-        <Text style={styles.coverBadge}>{formatDate(event.dateISO)}</Text>
-      </View>
+      {event.coverImageUrl ? (
+        <ImageBackground source={{ uri: event.coverImageUrl }} style={styles.cardCover}>
+          <Text style={styles.coverBadge}>{formatDate(event.dateISO)}</Text>
+        </ImageBackground>
+      ) : (
+        <View style={styles.cardCover}>
+          <Text style={styles.coverBadge}>{formatDate(event.dateISO)}</Text>
+        </View>
+      )}
       <View style={styles.cardBody}>
         <Text style={styles.cardTitle}>{event.title.toUpperCase()}</Text>
         <View style={styles.cardMetaRow}>

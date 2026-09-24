@@ -81,6 +81,7 @@ type Action =
   | { type: 'RSVP_EVENT'; eventId: string; status: 'going' | 'maybe' | 'none' }
   | { type: 'SEND_CHAT_MESSAGE'; channelId: string; text: string }
   | { type: 'DELETE_CHAT_MESSAGE'; messageId: string }
+  | { type: 'TOGGLE_PIN_MESSAGE'; messageId: string }
   | { type: 'SEND_DM'; threadId: string; text: string }
   | {
       type: 'SUBMIT_JOIN_REQUEST';
@@ -134,6 +135,8 @@ type Action =
       location: string;
       isFree: boolean;
       priceCents: number;
+      capacity?: number;
+      coverImageUrl?: string;
     };
 
 const initialState: AppState = {
@@ -195,6 +198,10 @@ function reducer(state: AppState, action: Action): AppState {
       const chatMessages = state.chatMessages.map((m) =>
         m.id === action.messageId ? { ...m, deleted: true, deletedByUserId: state.currentUserId } : m
       );
+      return { ...state, chatMessages };
+    }
+    case 'TOGGLE_PIN_MESSAGE': {
+      const chatMessages = state.chatMessages.map((m) => (m.id === action.messageId ? { ...m, pinned: !m.pinned } : m));
       return { ...state, chatMessages };
     }
     case 'SEND_DM': {
@@ -347,6 +354,7 @@ function reducer(state: AppState, action: Action): AppState {
         chapterId: action.chapterId,
         title: action.title,
         description: action.description,
+        coverImageUrl: action.coverImageUrl,
         dateISO: action.dateISO,
         location: action.location,
         hostUserId: state.currentUserId,
@@ -355,6 +363,7 @@ function reducer(state: AppState, action: Action): AppState {
         tipsEnabled: action.isFree,
         goingUserIds: [state.currentUserId],
         maybeUserIds: [],
+        capacity: action.capacity,
       };
       return { ...state, events: [...state.events, event] };
     }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { Avatar } from '@/components/Avatar';
@@ -110,7 +110,23 @@ export function ChatThreadScreen({ route }: Props) {
                       <RoleBadge role={authorRole} title={authorTitle} />
                     </View>
                     {canModerate ? (
-                      <Pressable onPress={() => dispatch({ type: 'DELETE_CHAT_MESSAGE', messageId: m.id })}>
+                      <Pressable
+                        hitSlop={10}
+                        onPress={() =>
+                          Alert.alert('Message options', undefined, [
+                            {
+                              text: m.pinned ? '📌 Unpin Message' : '📌 Pin Message',
+                              onPress: () => dispatch({ type: 'TOGGLE_PIN_MESSAGE', messageId: m.id }),
+                            },
+                            {
+                              text: '🗑️ Delete Message',
+                              style: 'destructive',
+                              onPress: () => dispatch({ type: 'DELETE_CHAT_MESSAGE', messageId: m.id }),
+                            },
+                            { text: 'Cancel', style: 'cancel' },
+                          ])
+                        }
+                      >
                         <Text style={{ color: isPinnedStyle ? colors.border : colors.mutedLight }}>⋯</Text>
                       </Pressable>
                     ) : null}
