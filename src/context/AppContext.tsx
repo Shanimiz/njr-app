@@ -69,9 +69,15 @@ interface PersistedMember {
 const STORAGE_KEY = 'njr:member';
 
 type Action =
-  | { type: 'TOGGLE_CHAPTER_SELECTION'; chapterId: string }
   | { type: 'CONFIRM_CHAPTER_SELECTION' }
   | { type: 'SET_ACTIVE_CHAPTER'; chapterId: string }
+  /** Tapping a chapter on ChapterSelectScreen that the member already has a
+   * request in for (pending or approved) — adds it to selectedChapterIds if
+   * it's somehow not there yet and makes it the active chapter in one step,
+   * for both the cold-launch "recognize a returning member" case and
+   * browsing back to that screen from inside the app to jump to a chapter
+   * already joined. */
+  | { type: 'ENTER_CHAPTER'; chapterId: string }
   | { type: 'RSVP_EVENT'; eventId: string; status: 'going' | 'maybe' | 'none' }
   | { type: 'SEND_CHAT_MESSAGE'; channelId: string; text: string }
   | { type: 'DELETE_CHAT_MESSAGE'; messageId: string }
@@ -115,12 +121,11 @@ const initialState: AppState = {
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'TOGGLE_CHAPTER_SELECTION': {
-      const isSelected = state.selectedChapterIds.includes(action.chapterId);
-      const selectedChapterIds = isSelected
-        ? state.selectedChapterIds.filter((id) => id !== action.chapterId)
+    case 'ENTER_CHAPTER': {
+      const selectedChapterIds = state.selectedChapterIds.includes(action.chapterId)
+        ? state.selectedChapterIds
         : [...state.selectedChapterIds, action.chapterId];
-      return { ...state, selectedChapterIds };
+      return { ...state, selectedChapterIds, activeChapterId: action.chapterId };
     }
     case 'CONFIRM_CHAPTER_SELECTION': {
       const activeChapterId = state.activeChapterId ?? state.selectedChapterIds[0] ?? null;
@@ -194,7 +199,15 @@ function reducer(state: AppState, action: Action): AppState {
         status: 'pending',
         requestedAt: new Date().toISOString(),
       };
-      return { ...state, users, memberships: [...withoutExisting, membership] };
+      // A submitted request makes this chapter "yours" for the profile
+      // chip line and the multi-city switcher, even before anyone
+      // approves it — this used to only happen via the old pick-then-
+      // continue flow on ChapterSelectScreen, which no longer runs before
+      // a join request goes in.
+      const selectedChapterIds = state.selectedChapterIds.includes(action.chapterId)
+        ? state.selectedChapterIds
+        : [...state.selectedChapterIds, action.chapterId];
+      return { ...state, users, memberships: [...withoutExisting, membership], selectedChapterIds };
     }
     case 'RECORD_PAYMENT': {
       const payment: PaymentRecord = {

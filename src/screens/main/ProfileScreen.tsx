@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { Screen } from '@/components/Screen';
 import { Avatar } from '@/components/Avatar';
 import { RoleBadge } from '@/components/RoleBadge';
@@ -7,6 +8,9 @@ import { colors, fonts, radii, spacing } from '@/theme';
 import { useApp } from '@/context/AppContext';
 import { permissions } from '@/lib/permissions';
 import type { ChapterRole } from '@/types';
+import type { MainTabParamList } from '@/navigation/types';
+
+type Props = BottomTabScreenProps<MainTabParamList, 'ProfileTab'>;
 
 /**
  * Profile + (for managers/owners) the roles & permissions panel, combined
@@ -15,8 +19,19 @@ import type { ChapterRole } from '@/types';
  * needs canManageRoles() to gate it (owner-only) once there's a backend to
  * write to.
  */
-export function ProfileScreen() {
+export function ProfileScreen({ navigation }: Props) {
   const { currentUser, currentUserId, selectedChapters, activeChapter, memberships, users, getRole, dispatch } = useApp();
+
+  const openChapterPicker = () => {
+    // One hop up from the tab navigator reaches the root stack, where
+    // ChapterSelect lives (same "reach the root navigator" pattern as the
+    // DMs button on EventsFeedScreen — the extra ?? fallback covers both
+    // in case ProfileScreen's own nesting ever changes).
+    const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
+      | (typeof navigation & { navigate: (screen: 'ChapterSelect') => void })
+      | undefined;
+    rootNav?.navigate('ChapterSelect');
+  };
 
   const chapterNames = selectedChapters.map((c) => c.city).join(' · ');
   const activeRole = activeChapter ? getRole(currentUserId, activeChapter.id) : null;
@@ -72,6 +87,10 @@ export function ProfileScreen() {
               </View>
             </View>
           ) : null}
+
+          <Pressable style={styles.browseLink} onPress={openChapterPicker}>
+            <Text style={styles.browseLinkText}>+ Browse / join another chapter</Text>
+          </Pressable>
 
           <Pressable
             style={styles.resetLink}
@@ -142,6 +161,8 @@ const styles = StyleSheet.create({
   rulesCard: { backgroundColor: colors.navy, borderRadius: radii.lg, padding: 14, marginTop: 6 },
   rulesTitle: { fontFamily: fonts.display, fontSize: 13, color: colors.gold, marginBottom: 8, letterSpacing: 0.4 },
   rulesText: { fontFamily: fonts.bodySemibold, fontSize: 12, color: colors.white, lineHeight: 21 },
-  resetLink: { marginTop: 24, alignItems: 'center', paddingVertical: 8 },
+  browseLink: { marginTop: 24, alignItems: 'center', paddingVertical: 10, backgroundColor: colors.bgLight, borderRadius: radii.md },
+  browseLinkText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.navy },
+  resetLink: { marginTop: 10, alignItems: 'center', paddingVertical: 8 },
   resetLinkText: { fontFamily: fonts.bodyRegular, fontSize: 11, color: colors.mutedLight, textDecorationLine: 'underline' },
 });

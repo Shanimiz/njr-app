@@ -41,6 +41,7 @@ export function RootNavigator() {
         ) : (
           <>
             <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
             <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
             <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
             <Stack.Screen name="DirectMessages" component={DirectMessagesScreen} options={{ presentation: 'modal' }} />

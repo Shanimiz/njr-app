@@ -56,7 +56,11 @@ export function JoinChapterScreen({ route, navigation }: Props) {
     } else if (!currentUser.photoUrl) {
       navigation.replace('CompleteProfile');
     } else {
-      dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
+      // Already has a profile — this chapter was added on top of an
+      // existing membership (via the "browse chapters" link), not first-time
+      // onboarding, so land directly in the chapter just requested rather
+      // than whichever chapter happened to be active before.
+      dispatch({ type: 'SET_ACTIVE_CHAPTER', chapterId: chapter.id });
     }
   };
 

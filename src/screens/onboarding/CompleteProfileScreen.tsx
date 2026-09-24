@@ -1,21 +1,11 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Screen } from '@/components/Screen';
 import { Avatar } from '@/components/Avatar';
 import { PillButton } from '@/components/PillButton';
 import { colors, fonts, radii, spacing } from '@/theme';
 import { useApp } from '@/context/AppContext';
-
-const AVATAR_OPTIONS: { emoji: string; bg: string }[] = [
-  { emoji: '🏃', bg: colors.gold },
-  { emoji: '🏃‍♀️', bg: colors.navySoft },
-  { emoji: '🏅', bg: colors.gold },
-  { emoji: '⭐', bg: colors.navySoft },
-  { emoji: '🔥', bg: colors.gold },
-  { emoji: '🐆', bg: colors.navySoft },
-  { emoji: '🕎', bg: colors.gold },
-  { emoji: '🍦', bg: colors.navySoft },
-];
 
 /**
  * Last onboarding step, per the brief: "after they fill this out they have
@@ -24,25 +14,54 @@ const AVATAR_OPTIONS: { emoji: string; bg: string }[] = [
  * every chosen chapter has a join request in — not per chapter, since a
  * profile is shared across all of a member's chapters.
  *
- * This picks a stand-in avatar instead of a real camera/library photo —
- * expo-image-picker (the package that does real photo picking) wasn't
- * installing cleanly in the Codespaces environment this was being tested
- * from, and it's a native-module package that's generally more reliable
- * in a proper dev build than inside Expo Go anyway. Swapping real photo
- * upload back in later only touches this one screen: everywhere else
- * (Avatar, ProfileScreen, app state) already just renders whatever string
- * is in `photoUrl`, image URI or otherwise, via src/components/Avatar.tsx.
+ * Uses the device's real camera or photo library via expo-image-picker. An
+ * earlier version of this screen used a fixed emoji-avatar grid instead —
+ * this package wasn't installing cleanly in the Codespaces environment this
+ * was first being tested from. If real photo upload ever needs to be
+ * swapped back out again, everywhere else (Avatar, ProfileScreen, app
+ * state) already just renders whatever string is in `photoUrl`, image URI
+ * or otherwise, via src/components/Avatar.tsx — only this one screen would
+ * need to change.
  */
 export function CompleteProfileScreen() {
   const { dispatch } = useApp();
-  const [selected, setSelected] = useState<string | undefined>(undefined);
+  const [photoUri, setPhotoUri] = useState<string | undefined>(undefined);
   const [bio, setBio] = useState('');
 
-  const canFinish = !!selected && bio.trim().length > 0;
+  const canFinish = !!photoUri && bio.trim().length > 0;
+
+  const pickFromLibrary = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Photo access needed', 'Allow access to your photos to choose a profile picture — you can turn this on in your phone’s Settings.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Camera access needed', 'Allow camera access to take a profile picture — you can turn this on in your phone’s Settings.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
 
   const handleFinish = () => {
-    if (!canFinish || !selected) return;
-    dispatch({ type: 'COMPLETE_PROFILE', photoUrl: selected, bio: bio.trim() });
+    if (!canFinish || !photoUri) return;
+    dispatch({ type: 'COMPLETE_PROFILE', photoUrl: photoUri, bio: bio.trim() });
     dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
   };
 
@@ -57,14 +76,17 @@ export function CompleteProfileScreen() {
       </View>
 
       <View style={styles.body}>
-        <Text style={styles.fieldLabel}>PICK AN AVATAR</Text>
-        <View style={styles.grid}>
-          {AVATAR_OPTIONS.map((opt) => (
-            <Pressable key={opt.emoji} onPress={() => setSelected(opt.emoji)} style={styles.gridItem}>
-              <Avatar size={56} bg={opt.bg} uri={opt.emoji} />
-              {selected === opt.emoji ? <View style={styles.selectedRing} /> : null}
+        <Text style={styles.fieldLabel}>YOUR PHOTO</Text>
+        <View style={styles.photoRow}>
+          <Avatar size={72} bg={colors.border} uri={photoUri} />
+          <View style={styles.photoButtons}>
+            <Pressable style={styles.photoBtn} onPress={takePhoto}>
+              <Text style={styles.photoBtnText}>📷 Take Photo</Text>
             </Pressable>
-          ))}
+            <Pressable style={styles.photoBtn} onPress={pickFromLibrary}>
+              <Text style={styles.photoBtnText}>🖼️ Choose From Library</Text>
+            </Pressable>
+          </View>
         </View>
 
         <Text style={styles.fieldLabel}>SHORT BIO</Text>
@@ -80,7 +102,7 @@ export function CompleteProfileScreen() {
 
       <View style={styles.footer}>
         <PillButton label="FINISH — ENTER THE APP" variant="gold" fullWidth disabled={!canFinish} onPress={handleFinish} />
-        {!canFinish ? <Text style={styles.hint}>Pick an avatar and add a short bio to continue.</Text> : null}
+        {!canFinish ? <Text style={styles.hint}>Add a photo and a short bio to continue.</Text> : null}
       </View>
     </Screen>
   );
@@ -94,18 +116,10 @@ const styles = StyleSheet.create({
   subtitle: { color: colors.border, fontFamily: fonts.bodyRegular, fontSize: 12, marginTop: 4 },
   body: { flex: 1, padding: spacing.lg, gap: 10 },
   fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.muted, letterSpacing: 0.5, marginTop: 8 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, justifyContent: 'center', paddingVertical: 8 },
-  gridItem: { width: 64, height: 64, alignItems: 'center', justifyContent: 'center' },
-  selectedRing: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 32,
-    borderWidth: 3,
-    borderColor: colors.navy,
-  },
+  photoRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8 },
+  photoButtons: { flex: 1, gap: 8 },
+  photoBtn: { backgroundColor: colors.bgLight, borderRadius: radii.md, paddingVertical: 10, paddingHorizontal: 12 },
+  photoBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.navy },
   bioInput: {
     width: '100%',
     minHeight: 100,

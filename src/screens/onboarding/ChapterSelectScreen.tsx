@@ -1,8 +1,7 @@
-import React from 'react';
-import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
-import { PillButton } from '@/components/PillButton';
 import { colors, fonts, radii, spacing } from '@/theme';
 import { useApp } from '@/context/AppContext';
 import type { RootStackParamList } from '@/navigation/types';
@@ -11,34 +10,43 @@ import logo from '../../../assets/logo.png';
 type Props = NativeStackScreenProps<RootStackParamList, 'ChapterSelect'>;
 
 /**
- * First screen a new (or logged-out) user sees. Pick one or more chapters —
- * picking more than one is what turns on the in-app city switcher on the
- * Events/Chats tabs later (see EventsFeedScreen). Chapters the user has no
- * membership record for at all route through the join form (JoinChapterScreen)
- * before they can enter the app; chapters they already have a pending or
- * approved membership for skip straight through.
+ * First screen a new (or logged-out) user sees, and also reachable from
+ * inside the app (see the "Browse / join another chapter" link on
+ * ProfileScreen) any time a member wants to add another chapter. Search
+ * narrows the list; tapping a chapter does one of two things depending on
+ * whether the signed-in member already has a request in for it:
+ *  - already a member (pending or approved) → straight into the app for
+ *    that chapter, exactly like re-opening the app does.
+ *  - no membership record yet → the join-request form (JoinChapterScreen),
+ *    which for a chapter added on top of an existing membership skips
+ *    straight back into the app afterward instead of the one-time photo/bio
+ *    step (see JoinChapterScreen — that step is shared across chapters and
+ *    only needs to happen once).
  */
 export function ChapterSelectScreen({ navigation }: Props) {
-  const { chapters, selectedChapterIds, memberships, currentUserId, currentUser, dispatch } = useApp();
+  const { chapters, memberships, currentUserId, dispatch } = useApp();
+  const [query, setQuery] = useState('');
 
-  const toggle = (chapterId: string) => dispatch({ type: 'TOGGLE_CHAPTER_SELECTION', chapterId });
-  const continueLabel =
-    selectedChapterIds.length === 0
-      ? 'Select a chapter to continue'
-      : `CONTINUE — ${selectedChapterIds.length} ${selectedChapterIds.length === 1 ? 'CITY' : 'CITIES'}`;
+  const filteredChapters = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return chapters;
+    return chapters.filter((c) => c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q));
+  }, [chapters, query]);
 
-  const handleContinue = () => {
-    const chapterNeedingJoin = selectedChapterIds.find(
-      (id) => !memberships.some((m) => m.userId === currentUserId && m.chapterId === id)
-    );
-    if (chapterNeedingJoin) {
-      navigation.navigate('JoinChapter', { chapterId: chapterNeedingJoin });
-    } else if (!currentUser.photoUrl) {
-      // Every chosen chapter already has an application in, but this
-      // first-time user still needs to set up a profile (photo + bio).
-      navigation.navigate('CompleteProfile');
+  const isMember = (chapterId: string) => memberships.some((m) => m.userId === currentUserId && m.chapterId === chapterId);
+
+  const handleChapterPress = (chapterId: string) => {
+    if (isMember(chapterId)) {
+      dispatch({ type: 'ENTER_CHAPTER', chapterId });
+      // Only true when this screen was pushed on top of the main app (the
+      // ProfileScreen "browse chapters" link) — on a fresh launch this is
+      // the root screen and there's nothing to go back to yet; the root
+      // navigator swaps itself to the main app on its own in that case.
+      if (navigation.canGoBack()) {
+        navigation.navigate('Main');
+      }
     } else {
-      dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
+      navigation.navigate('JoinChapter', { chapterId });
     }
   };
 
@@ -46,37 +54,56 @@ export function ChapterSelectScreen({ navigation }: Props) {
     <Screen edges={['top', 'bottom']}>
       <View style={styles.heroWrap}>
         <View style={styles.hero}>
+          {navigation.canGoBack() ? (
+            <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backTap}>
+              <Text style={styles.back}>← BACK</Text>
+            </Pressable>
+          ) : null}
           <Image source={logo} style={styles.logo} />
           <Text style={styles.heroTitle}>PICK YOUR CITY</Text>
         </View>
         <View style={styles.heroAngle} />
       </View>
 
+      <View style={styles.searchWrap}>
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="🔍  Search chapters…"
+          placeholderTextColor={colors.mutedLight}
+          style={styles.searchInput}
+          returnKeyType="search"
+          autoCapitalize="none"
+        />
+      </View>
+
       <FlatList
-        data={chapters}
+        data={filteredChapters}
         keyExtractor={(c) => c.id}
         contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={<Text style={styles.empty}>No chapters match “{query}”.</Text>}
         renderItem={({ item }) => {
-          const selected = selectedChapterIds.includes(item.id);
           const disabled = !!item.comingSoon;
+          const member = !disabled && isMember(item.id);
+          const subtitle = item.comingSoon
+            ? 'COMING SOON'
+            : member
+            ? "✓ YOU'RE IN — TAP TO ENTER"
+            : `${item.memberCount} RUNNERS · TAP TO REQUEST TO JOIN`;
           return (
             <Pressable
               disabled={disabled}
-              onPress={() => toggle(item.id)}
-              style={[
-                styles.card,
-                { backgroundColor: disabled ? colors.bgLight : selected ? colors.gold : colors.bgLight, opacity: disabled ? 0.6 : 1 },
-              ]}
+              onPress={() => handleChapterPress(item.id)}
+              style={[styles.card, { backgroundColor: disabled ? colors.bgLight : member ? colors.gold : colors.bgLight, opacity: disabled ? 0.6 : 1 }]}
             >
               <View>
-                <Text style={[styles.cardTitle, { color: selected ? colors.navy : colors.navy }]}>
+                <Text style={styles.cardTitle}>
                   {item.emoji} {item.name.toUpperCase()}
                 </Text>
-                <Text style={[styles.cardSubtitle, { color: selected ? colors.navy : colors.muted }]}>
-                  {item.comingSoon ? 'COMING SOON' : `${item.memberCount} RUNNERS`}
-                </Text>
+                <Text style={[styles.cardSubtitle, { color: member ? colors.navy : colors.muted }]}>{subtitle}</Text>
               </View>
-              {selected ? (
+              {member ? (
                 <View style={styles.check}>
                   <Text style={styles.checkText}>✓</Text>
                 </View>
@@ -85,16 +112,6 @@ export function ChapterSelectScreen({ navigation }: Props) {
           );
         }}
       />
-
-      <View style={styles.footer}>
-        <PillButton
-          label={continueLabel}
-          variant="navy"
-          fullWidth
-          disabled={selectedChapterIds.length === 0}
-          onPress={handleContinue}
-        />
-      </View>
     </Screen>
   );
 }
@@ -110,6 +127,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  backTap: { position: 'absolute', top: 16, left: spacing.lg, zIndex: 1 },
+  back: { color: colors.white, fontFamily: fonts.bodyBold, fontSize: 12 },
   heroAngle: {
     position: 'absolute',
     left: -24,
@@ -121,7 +140,18 @@ const styles = StyleSheet.create({
   },
   logo: { width: 64, height: 64, borderRadius: 32 },
   heroTitle: { fontFamily: fonts.display, fontSize: 32, color: colors.white, letterSpacing: 0.5 },
+  searchWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  searchInput: {
+    backgroundColor: colors.bgLight,
+    borderRadius: radii.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: fonts.bodySemibold,
+    fontSize: 14,
+    color: colors.navy,
+  },
   list: { padding: spacing.lg, gap: spacing.md },
+  empty: { fontFamily: fonts.bodyRegular, fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: 24 },
   card: {
     borderRadius: radii.lg,
     padding: spacing.lg,
@@ -129,7 +159,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  cardTitle: { fontFamily: fonts.display, fontSize: 22, letterSpacing: 0.4 },
+  cardTitle: { fontFamily: fonts.display, fontSize: 22, letterSpacing: 0.4, color: colors.navy },
   cardSubtitle: { fontFamily: fonts.bodyBold, fontSize: 11, letterSpacing: 0.6, marginTop: 2 },
   check: {
     width: 28,
@@ -140,5 +170,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkText: { color: colors.white, fontFamily: fonts.bodyBold, fontSize: 14 },
-  footer: { padding: spacing.lg, paddingBottom: spacing.xl },
 });
