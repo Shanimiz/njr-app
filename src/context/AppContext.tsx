@@ -20,6 +20,7 @@ import type {
   DMMessage,
   DMThread,
   EventMessage,
+  FeedbackEntry,
   Membership,
   PaymentKind,
   PaymentRecord,
@@ -44,6 +45,8 @@ interface AppState {
    * real card number is ever stored; this is just enough to render "Card
    * ending in ••••" consistently across PaymentScreen. */
   cardLast4: string;
+  /** Free-text feedback submitted from the More tab — see FeedbackScreen. */
+  feedback: FeedbackEntry[];
   /** Chapters the signed-in user picked on the chapter-select screen. Empty
    * until onboarding completes. */
   selectedChapterIds: string[];
@@ -84,6 +87,7 @@ type Action =
    * already joined. */
   | { type: 'ENTER_CHAPTER'; chapterId: string }
   | { type: 'RSVP_EVENT'; eventId: string; status: 'going' | 'maybe' | 'none' }
+  | { type: 'SEND_EVENT_MESSAGE'; eventId: string; text: string }
   | { type: 'SEND_CHAT_MESSAGE'; channelId: string; text: string }
   | { type: 'DELETE_CHAT_MESSAGE'; messageId: string }
   | { type: 'TOGGLE_PIN_MESSAGE'; messageId: string }
@@ -150,7 +154,22 @@ type Action =
     }
   /** "Change" on PaymentScreen's card row, or the Profile tab's payment
    * method link — mock only, see cardLast4 above. */
-  | { type: 'UPDATE_CARD'; last4: string };
+  | { type: 'UPDATE_CARD'; last4: string }
+  /** The Profile tab's "Edit private info" link — name, email, phone,
+   * emergency contact, and (optionally) a new photo, all in one place.
+   * Separate from COMPLETE_PROFILE, which only ever touches photo + bio. */
+  | {
+      type: 'UPDATE_PRIVATE_INFO';
+      fullName: string;
+      email: string;
+      phone: string;
+      emergencyContactName: string;
+      emergencyContactPhone: string;
+      photoUrl?: string;
+    }
+  /** The More tab's Feedback page — captured against whichever chapter is
+   * active at the time, if any. */
+  | { type: 'SUBMIT_FEEDBACK'; text: string };
 
 const initialState: AppState = {
   currentUserId,
@@ -165,6 +184,7 @@ const initialState: AppState = {
   dmMessages: seedDmMessages,
   payments: [],
   cardLast4: '4242',
+  feedback: [],
   // A real signed-in user starts having picked nothing yet — the app opens
   // on the chapter-select screen. See RootNavigator for how this gates
   // navigation.
@@ -197,6 +217,16 @@ function reducer(state: AppState, action: Action): AppState {
         return { ...ev, goingUserIds: going, maybeUserIds: maybe };
       });
       return { ...state, events };
+    }
+    case 'SEND_EVENT_MESSAGE': {
+      const message: EventMessage = {
+        id: `em_${Date.now()}`,
+        eventId: action.eventId,
+        authorId: state.currentUserId,
+        text: action.text,
+        createdAt: new Date().toISOString(),
+      };
+      return { ...state, eventMessages: [...state.eventMessages, message] };
     }
     case 'SEND_CHAT_MESSAGE': {
       const message: ChatMessage = {
@@ -246,6 +276,22 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'UPDATE_CARD':
       return { ...state, cardLast4: action.last4 };
+    case 'UPDATE_PRIVATE_INFO': {
+      const existing = state.users[state.currentUserId];
+      const users = {
+        ...state.users,
+        [state.currentUserId]: {
+          ...existing,
+          fullName: action.fullName,
+          email: action.email || undefined,
+          phone: action.phone,
+          emergencyContactName: action.emergencyContactName,
+          emergencyContactPhone: action.emergencyContactPhone,
+          photoUrl: action.photoUrl ?? existing.photoUrl,
+        },
+      };
+      return { ...state, users };
+    }
     case 'SUBMIT_JOIN_REQUEST': {
       const existingUser = state.users[state.currentUserId];
       const users = {
@@ -312,6 +358,16 @@ function reducer(state: AppState, action: Action): AppState {
         [state.currentUserId]: { ...state.users[state.currentUserId], photoUrl: action.photoUrl, bio: action.bio },
       };
       return { ...state, users };
+    }
+    case 'SUBMIT_FEEDBACK': {
+      const entry: FeedbackEntry = {
+        id: `fb_${Date.now()}`,
+        userId: state.currentUserId,
+        chapterId: state.activeChapterId,
+        text: action.text,
+        createdAt: new Date().toISOString(),
+      };
+      return { ...state, feedback: [...state.feedback, entry] };
     }
     case 'HYDRATE': {
       if (!action.payload) return { ...state, hydrated: true };

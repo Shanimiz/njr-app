@@ -40,6 +40,12 @@ export function EventDetailScreen({ route, navigation }: Props) {
     rootNav?.navigate('Payment', { eventId: event.id, mode });
   };
 
+  const sendMessage = () => {
+    if (!draft.trim()) return;
+    dispatch({ type: 'SEND_EVENT_MESSAGE', eventId: event.id, text: draft.trim() });
+    setDraft('');
+  };
+
   const openProfile = (userId: string) => {
     const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
       | (typeof navigation & { navigate: (screen: 'UserProfile', params: { userId: string }) => void })
@@ -147,9 +153,10 @@ export function EventDetailScreen({ route, navigation }: Props) {
           placeholder="Ask a question or say hi…"
           placeholderTextColor={colors.mutedLight}
           style={styles.composerInput}
+          onSubmitEditing={sendMessage}
         />
         <Pressable
-          onPress={() => setDraft('')}
+          onPress={sendMessage}
           style={styles.sendBtn}
           disabled={!draft.trim()}
         >

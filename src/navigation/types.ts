@@ -18,6 +18,13 @@ export type RootStackParamList = {
   // The "CHANGE" link on Payment, and the Profile tab's own settings link,
   // both open this — reads/writes the mock card-on-file in context.
   PaymentMethod: undefined;
+  // The pencil icon on the DM inbox — pick someone to start a new
+  // conversation with, then hands off to DMThread.
+  NewMessage: undefined;
+  // The Profile tab's "Edit private info" link — name, email, phone,
+  // emergency contact, photo. Separate from CompleteProfile, which only
+  // ever touches photo + bio.
+  EditPrivateInfo: undefined;
   // Reads the manager's activeChapter from context — no params needed.
   ManageRequests: undefined;
 };
@@ -50,4 +57,7 @@ export type MoreStackParamList = {
   MoreMenu: undefined;
   Members: undefined;
   Donate: undefined;
+  Merch: undefined;
+  Feedback: undefined;
+  Etiquette: undefined;
 };

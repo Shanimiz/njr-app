@@ -41,7 +41,10 @@ export function MoreMenuScreen({ navigation }: Props) {
       <View style={styles.list}>
         <MenuRow icon="✉️" label="Messages" sub="Your chapter DMs" onPress={openDirectMessages} />
         <MenuRow icon="🧑‍🤝‍🧑" label="Members" sub="Everyone in this chapter" onPress={() => navigation.navigate('Members')} />
+        <MenuRow icon="🏃" label="Running Etiquette" sub="Tips for group runs" onPress={() => navigation.navigate('Etiquette')} />
+        <MenuRow icon="🛍️" label="NJR Merch" sub="Shop the team store" onPress={() => navigation.navigate('Merch')} />
         <MenuRow icon="❤️" label="Donate to NJR" sub="Support the club" onPress={() => navigation.navigate('Donate')} />
+        <MenuRow icon="📝" label="Feedback" sub="Tell us what's on your mind" onPress={() => navigation.navigate('Feedback')} />
       </View>
     </Screen>
   );

@@ -11,9 +11,11 @@ import { CompleteProfileScreen } from '@/screens/onboarding/CompleteProfileScree
 import { MainTabs } from './MainTabs';
 import { DirectMessagesScreen } from '@/screens/main/DirectMessagesScreen';
 import { DMThreadScreen } from '@/screens/main/DMThreadScreen';
+import { NewMessageScreen } from '@/screens/main/NewMessageScreen';
 import { UserProfileScreen } from '@/screens/main/UserProfileScreen';
 import { PaymentScreen } from '@/screens/main/PaymentScreen';
 import { PaymentMethodScreen } from '@/screens/main/PaymentMethodScreen';
+import { EditPrivateInfoScreen } from '@/screens/main/EditPrivateInfoScreen';
 import { ManageRequestsScreen } from '@/screens/main/ManageRequestsScreen';
 import { colors } from '@/theme';
 
@@ -63,9 +65,11 @@ export function RootNavigator() {
         <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
         <Stack.Screen name="DirectMessages" component={DirectMessagesScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="DMThread" component={DMThreadScreen} />
+        <Stack.Screen name="NewMessage" component={NewMessageScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="UserProfile" component={UserProfileScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PaymentMethod" component={PaymentMethodScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="EditPrivateInfo" component={EditPrivateInfoScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="ManageRequests" component={ManageRequestsScreen} options={{ presentation: 'modal' }} />
       </Stack.Navigator>
     </NavigationContainer>

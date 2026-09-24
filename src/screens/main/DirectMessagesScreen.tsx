@@ -12,12 +12,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'DirectMessages'>;
 
 /**
  * DM inbox — its own page/UI per the brief, reached from the envelope icon
- * on the Events tab rather than living in the bottom nav. Threads can cross
- * chapters (Noa is Tel Aviv, everyone else here is NYC), which is why role
- * lookups below pass each thread's own chapter rather than assuming one.
- *
- * First draft stops at the inbox list — tapping a thread is a natural next
- * screen to build once the list itself is approved.
+ * on the Events tab, the More tab's Messages link, and the bottom nav.
+ * Threads can cross chapters (Noa is Tel Aviv, everyone else here is NYC),
+ * which is why role lookups below pass each thread's own chapter rather
+ * than assuming one. Tapping a row opens that conversation (DMThreadScreen);
+ * the pencil icon opens NewMessageScreen to start a fresh one.
  */
 export function DirectMessagesScreen({ navigation }: Props) {
   const { dmThreads, users, currentUserId, memberships } = useApp();
@@ -34,7 +33,7 @@ export function DirectMessagesScreen({ navigation }: Props) {
             </Pressable>
             <Text style={styles.title}>MESSAGES</Text>
           </View>
-          <Pressable style={styles.newBtn}>
+          <Pressable style={styles.newBtn} onPress={() => navigation.navigate('NewMessage')}>
             <Text style={styles.newBtnText}>✎</Text>
           </Pressable>
         </View>

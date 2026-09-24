@@ -51,6 +51,7 @@ export interface Membership {
 export interface UserProfile {
   id: string;
   fullName: string;
+  email?: string;
   phone: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
@@ -154,5 +155,16 @@ export interface PaymentRecord {
   amountCents: number;
   currency: 'USD' | 'ILS';
   status: 'pending' | 'succeeded' | 'failed' | 'refunded';
+  createdAt: string;
+}
+
+/** Free-text feedback submitted from the More tab — see FeedbackScreen.
+ * No admin-facing "view feedback" screen exists yet; this just captures it
+ * in app state so one is a natural follow-up to build. */
+export interface FeedbackEntry {
+  id: string;
+  userId: string;
+  chapterId: string | null;
+  text: string;
   createdAt: string;
 }
