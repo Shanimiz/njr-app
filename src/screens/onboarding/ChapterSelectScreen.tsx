@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { colors, fonts, radii, spacing } from '@/theme';
@@ -52,12 +52,6 @@ export function ChapterSelectScreen({ navigation }: Props) {
   }, [chapters, query, memberships, currentUserId]);
 
   const handleChapterPress = (chapterId: string) => {
-    // TEMPORARY DEBUG — pinpointing why taps on this screen aren't
-    // registering. Remove once that's found. If this alert never shows up
-    // when tapping a card, the tap isn't reaching this handler at all (a
-    // layout/touch problem); if it does show up, the problem is somewhere
-    // after this line.
-    Alert.alert('DEBUG', `Tap registered for chapter: ${chapterId}\nalready member: ${isMember(chapterId)}`);
     if (isMember(chapterId)) {
       dispatch({ type: 'ENTER_CHAPTER', chapterId });
       // Only true when this screen was pushed on top of the main app (the

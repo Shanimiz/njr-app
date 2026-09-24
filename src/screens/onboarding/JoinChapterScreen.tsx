@@ -37,6 +37,13 @@ export function JoinChapterScreen({ route, navigation }: Props) {
   const canSubmit = !!(fullName.trim() && phone.trim() && emergencyName.trim() && emergencyPhone.trim() && safetyAnswer.trim());
 
   const handleSubmit = () => {
+    // TEMPORARY DEBUG — pinpointing why this button doesn't respond. If
+    // this alert never appears when tapping "SEND REQUEST TO JOIN", the
+    // button is disabled (canSubmit is false — one of the 5 required
+    // fields is still empty) rather than the tap failing to register; if it
+    // does appear, the problem is somewhere after this line. Remove once
+    // the cause is found.
+    Alert.alert('DEBUG', `Submit tap registered. canSubmit: ${canSubmit}`);
     if (!canSubmit) return;
     dispatch({
       type: 'SUBMIT_JOIN_REQUEST',
@@ -71,17 +78,7 @@ export function JoinChapterScreen({ route, navigation }: Props) {
     <Screen>
       <View style={styles.headerWrap}>
         <View style={styles.header}>
-          <Pressable
-            onPress={() => {
-              // TEMPORARY DEBUG — same diagnostic as ChapterSelectScreen's
-              // cards, for the back button here. Remove once the cause is
-              // found.
-              Alert.alert('DEBUG', 'Back button tap registered on JoinChapterScreen');
-              navigation.goBack();
-            }}
-            hitSlop={12}
-            style={styles.backTap}
-          >
+          <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backTap}>
             <Text style={styles.back}>← BACK</Text>
           </Pressable>
           <Text style={styles.title}>JOIN {chapter.name.toUpperCase()}</Text>
