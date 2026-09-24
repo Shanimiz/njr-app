@@ -1,4 +1,9 @@
 export type RootStackParamList = {
+  // The very first screen during onboarding — logo + welcome copy + "Get
+  // Started" — before ChapterSelect's "pick your city." Only ever the
+  // initial route while hasChosenChapter is false (see RootNavigator); a
+  // returning member with an active chapter skips straight to Main.
+  Welcome: undefined;
   ChapterSelect: undefined;
   JoinChapter: { chapterId: string };
   RequestSent: { chapterId: string };

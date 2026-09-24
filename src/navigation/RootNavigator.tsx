@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { useApp } from '@/context/AppContext';
+import { WelcomeScreen } from '@/screens/onboarding/WelcomeScreen';
 import { ChapterSelectScreen } from '@/screens/onboarding/ChapterSelectScreen';
 import { JoinChapterScreen } from '@/screens/onboarding/JoinChapterScreen';
 import { RequestSentScreen } from '@/screens/onboarding/RequestSentScreen';
@@ -58,8 +59,9 @@ export function RootNavigator() {
   // the app that navigate call happens to fire from.
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasChosenChapter ? 'Main' : 'ChapterSelect'}>
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasChosenChapter ? 'Main' : 'Welcome'}>
         <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
         <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
         <Stack.Screen name="RequestSent" component={RequestSentScreen} />
