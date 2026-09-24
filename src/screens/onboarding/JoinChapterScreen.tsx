@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { PillButton } from '@/components/PillButton';
@@ -125,6 +125,8 @@ function Field(props: { label: string; value: string; onChangeText: (v: string) 
         keyboardType={props.keyboardType}
         autoCapitalize={props.autoCapitalize}
         multiline={props.multiline}
+        returnKeyType={props.multiline ? undefined : 'done'}
+        onSubmitEditing={props.multiline ? undefined : Keyboard.dismiss}
         style={[styles.fieldInput, props.multiline ? { minHeight: 64, textAlignVertical: 'top' } : null]}
       />
     </View>

@@ -1,28 +1,30 @@
 import React from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/theme';
 
 /** Thin wrapper so every screen gets the same background + safe-area
- * handling without repeating it. Also makes every screen dismiss the
- * keyboard on a tap outside a text field, and shifts content up above the
- * keyboard on iOS. Without this, a screen with a text input and a button
- * below it (the registration form, the profile step) could leave that
- * button unreachable once the keyboard was up, with no way to close it.
+ * handling without repeating it. Also shifts content up above the keyboard
+ * on iOS, so a text input and a button below it (the registration form,
+ * the profile step) don't end up with that button hidden behind the
+ * keyboard.
  *
- * Built with Pressable rather than the older TouchableWithoutFeedback —
- * nested Pressables negotiate taps with each other correctly (tapping a
- * button inside only fires that button, not this wrapper too), whereas
- * TouchableWithoutFeedback can swallow the first tap on a nested button
- * when the keyboard is still open, requiring a second tap to actually
- * work. */
+ * This used to also wrap children in a Pressable that called
+ * Keyboard.dismiss on any background tap, so tapping outside a text field
+ * would close the keyboard. In practice that outer Pressable ended up
+ * swallowing taps meant for buttons nested inside it (the Finish button,
+ * the Send Request to Join button) on real devices, even though nested
+ * Pressables are supposed to negotiate this correctly — so it's been
+ * removed. Individual text inputs are responsible for their own
+ * dismiss-the-keyboard affordance instead (returnKeyType="done" +
+ * onSubmitEditing={Keyboard.dismiss}), and since content already shifts
+ * above the keyboard here, a screen's primary button should always be
+ * reachable without dismissing the keyboard at all. */
 export function Screen({ children, style, edges }: { children: React.ReactNode; style?: ViewStyle; edges?: ('top' | 'bottom' | 'left' | 'right')[] }) {
   return (
     <SafeAreaView style={[styles.root, style]} edges={edges ?? ['top', 'bottom']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <Pressable style={styles.flex} onPress={Keyboard.dismiss}>
-          {children}
-        </Pressable>
+        {children}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
