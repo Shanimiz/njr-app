@@ -33,6 +33,7 @@ export const permissions = {
   canCreateEvents: (role: ChapterRole) => atLeast(role, 'manager'),
   canEditAnyEvent: (role: ChapterRole) => atLeast(role, 'manager'),
   canViewEmergencyContacts: (role: ChapterRole) => atLeast(role, 'manager'),
+  canViewFeedback: (role: ChapterRole) => atLeast(role, 'manager'),
   /** Changing someone ELSE's role — only an owner, matching the wireframe's
    * "Manage other admins' roles — Owner only" note. */
   canManageRoles: (role: ChapterRole) => atLeast(role, 'owner'),

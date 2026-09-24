@@ -20,7 +20,7 @@ type Props = BottomTabScreenProps<MainTabParamList, 'ProfileTab'>;
  * write to.
  */
 export function ProfileScreen({ navigation }: Props) {
-  const { currentUser, currentUserId, selectedChapters, activeChapter, memberships, users, getRole, getMembership, dispatch } = useApp();
+  const { currentUser, currentUserId, selectedChapters, activeChapter, memberships, users, feedback, getRole, getMembership, dispatch } = useApp();
 
   const openChapterPicker = () => {
     // One hop up from the tab navigator reaches the root stack, where
@@ -45,6 +45,13 @@ export function ProfileScreen({ navigation }: Props) {
       | (typeof navigation & { navigate: (screen: 'ManageRequests') => void })
       | undefined;
     rootNav?.navigate('ManageRequests');
+  };
+
+  const openReviewFeedback = () => {
+    const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
+      | (typeof navigation & { navigate: (screen: 'ReviewFeedback') => void })
+      | undefined;
+    rootNav?.navigate('ReviewFeedback');
   };
 
   const openPaymentMethod = () => {
@@ -79,6 +86,9 @@ export function ProfileScreen({ navigation }: Props) {
     : [];
   const pendingCount = activeChapter
     ? memberships.filter((m) => m.chapterId === activeChapter.id && m.status === 'pending').length
+    : 0;
+  const feedbackCount = activeChapter
+    ? feedback.filter((f) => f.chapterId === activeChapter.id || f.chapterId === null).length
     : 0;
 
   return (
@@ -119,6 +129,10 @@ export function ProfileScreen({ navigation }: Props) {
             <View style={styles.rolesSection}>
               <Pressable style={styles.reviewLink} onPress={openManageRequests}>
                 <Text style={styles.reviewLinkText}>📋 Review pending requests {pendingCount > 0 ? `(${pendingCount})` : ''}</Text>
+              </Pressable>
+
+              <Pressable style={styles.reviewLink} onPress={openReviewFeedback}>
+                <Text style={styles.reviewLinkText}>💬 Review feedback {feedbackCount > 0 ? `(${feedbackCount})` : ''}</Text>
               </Pressable>
 
               <Text style={styles.rolesTitle}>MANAGE ROLES</Text>

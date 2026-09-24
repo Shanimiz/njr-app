@@ -17,6 +17,7 @@ import { PaymentScreen } from '@/screens/main/PaymentScreen';
 import { PaymentMethodScreen } from '@/screens/main/PaymentMethodScreen';
 import { EditPrivateInfoScreen } from '@/screens/main/EditPrivateInfoScreen';
 import { ManageRequestsScreen } from '@/screens/main/ManageRequestsScreen';
+import { ReviewFeedbackScreen } from '@/screens/main/ReviewFeedbackScreen';
 import { colors } from '@/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -71,6 +72,7 @@ export function RootNavigator() {
         <Stack.Screen name="PaymentMethod" component={PaymentMethodScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="EditPrivateInfo" component={EditPrivateInfoScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="ManageRequests" component={ManageRequestsScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="ReviewFeedback" component={ReviewFeedbackScreen} options={{ presentation: 'modal' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

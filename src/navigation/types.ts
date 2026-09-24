@@ -27,6 +27,9 @@ export type RootStackParamList = {
   EditPrivateInfo: undefined;
   // Reads the manager's activeChapter from context — no params needed.
   ManageRequests: undefined;
+  // Manager/owner-only view of what's been submitted on the More tab's
+  // Feedback page — reads activeChapter from context, no params needed.
+  ReviewFeedback: undefined;
 };
 
 export type MainTabParamList = {
