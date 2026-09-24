@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@/components/Screen';
 import { colors, fonts, radii, spacing } from '@/theme';
@@ -58,18 +58,12 @@ export function ChapterSelectScreen({ navigation }: Props) {
 
   const handleChapterPress = (chapterId: string) => {
     if (isMember(chapterId)) {
-      // TEMPORARY DEBUG — pinpointing why tapping an already-joined chapter
-      // (e.g. "YOU'RE IN — TAP TO ENTER") sometimes does nothing. Remove
-      // once the cause is found.
-      Alert.alert('DEBUG', `Tap registered. chapterId: ${chapterId}. canGoBack: ${navigation.canGoBack()}`);
       dispatch({ type: 'ENTER_CHAPTER', chapterId });
-      // Only true when this screen was pushed on top of the main app (the
-      // ProfileScreen "browse chapters" link) — on a fresh launch this is
-      // the root screen and there's nothing to go back to yet; the root
-      // navigator swaps itself to the main app on its own in that case.
-      if (navigation.canGoBack()) {
-        navigation.navigate('Main');
-      }
+      // Main is always registered in RootNavigator now (see there for why),
+      // so this always works — whether this screen is the app's root (a
+      // fresh launch) or was pushed on top of the main app (the
+      // ProfileScreen "browse chapters" link).
+      navigation.navigate('Main');
     } else {
       navigation.navigate('JoinChapter', { chapterId });
     }

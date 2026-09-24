@@ -37,13 +37,10 @@ export function RequestSentScreen({ route, navigation }: Props) {
       navigation.replace('CompleteProfile');
     } else {
       dispatch({ type: 'SET_ACTIVE_CHAPTER', chapterId: chapter.id });
-      // Only needed when this chapter was added on top of an existing
-      // membership (browsed to from the Profile tab) — a first-time
-      // onboarding completion flips RootNavigator to the main-app screen
-      // set on its own once activeChapterId is set.
-      if (navigation.canGoBack()) {
-        navigation.navigate('Main');
-      }
+      // Main is always registered in RootNavigator now, so this always
+      // works — whether this was a first-time onboarding completion or a
+      // chapter added on top of an existing membership.
+      navigation.navigate('Main');
     }
   };
 

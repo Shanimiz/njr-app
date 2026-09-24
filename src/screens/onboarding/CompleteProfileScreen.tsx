@@ -78,6 +78,11 @@ export function CompleteProfileScreen({ route, navigation }: Props) {
       navigation.goBack();
     } else {
       dispatch({ type: 'CONFIRM_CHAPTER_SELECTION' });
+      // Main is always registered in RootNavigator now — without this
+      // explicit call, finishing onboarding set the app's state correctly
+      // but never actually moved you off this screen (the same root cause
+      // as the "tap to enter" bug elsewhere in onboarding).
+      navigation.navigate('Main');
     }
   };
 

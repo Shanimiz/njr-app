@@ -31,28 +31,36 @@ export function RootNavigator() {
     );
   }
 
+  // ROOT-CAUSE FIX: this used to swap which screens even EXIST depending on
+  // hasChosenChapter, so a screen calling navigation.navigate('Main') could
+  // silently do nothing if 'Main' hadn't been added to the navigator's
+  // screen set yet at that exact moment (React re-renders this component
+  // asynchronously after a dispatch — the navigator doesn't retroactively
+  // jump anywhere just because a new screen becomes available to it). That
+  // was invisible whenever code was ALSO relying on canGoBack() to decide
+  // whether to navigate — on a screen with no back history (a fresh app
+  // launch, since ChapterSelect starts as the root route), canGoBack() is
+  // false, so the navigate call was skipped entirely and nothing happened.
+  // Confirmed via a debug alert: tapping an already-approved chapter on a
+  // fresh launch showed canGoBack: false and never entered the app.
+  //
+  // Fix: register every screen unconditionally, all the time. Only the
+  // FIRST screen shown on a cold launch changes (initialRouteName below) —
+  // 'Main' is always a valid, always-present navigate() target after that,
+  // so every screen that does navigation.navigate('Main') (ChapterSelect,
+  // RequestSent, CompleteProfile) now reliably works regardless of where in
+  // the app that navigate call happens to fire from.
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!hasChosenChapter ? (
-          <>
-            <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
-            <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
-            <Stack.Screen name="RequestSent" component={RequestSentScreen} />
-            <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
-            <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
-            <Stack.Screen name="RequestSent" component={RequestSentScreen} />
-            <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
-            <Stack.Screen name="DirectMessages" component={DirectMessagesScreen} options={{ presentation: 'modal' }} />
-            <Stack.Screen name="Payment" component={PaymentScreen} options={{ presentation: 'modal' }} />
-            <Stack.Screen name="ManageRequests" component={ManageRequestsScreen} options={{ presentation: 'modal' }} />
-          </>
-        )}
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasChosenChapter ? 'Main' : 'ChapterSelect'}>
+        <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen name="ChapterSelect" component={ChapterSelectScreen} />
+        <Stack.Screen name="JoinChapter" component={JoinChapterScreen} />
+        <Stack.Screen name="RequestSent" component={RequestSentScreen} />
+        <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
+        <Stack.Screen name="DirectMessages" component={DirectMessagesScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="Payment" component={PaymentScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="ManageRequests" component={ManageRequestsScreen} options={{ presentation: 'modal' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
