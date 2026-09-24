@@ -22,9 +22,11 @@ export type MainTabParamList = {
 export type EventsStackParamList = {
   EventsFeed: undefined;
   EventDetail: { eventId: string };
+  CreateEvent: undefined;
 };
 
 export type ChatsStackParamList = {
   ChatsList: undefined;
   ChatThread: { channelId: string };
+  CreateChat: undefined;
 };

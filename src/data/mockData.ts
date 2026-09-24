@@ -235,39 +235,99 @@ export const users: Record<string, UserProfile> = {
   },
   u_ron: {
     id: 'u_ron',
-    fullName: 'Ron Katz',
+    fullName: 'Ron Sitner',
     phone: '+1 (917) 555-0111',
     emergencyContactName: 'Not on file',
     emergencyContactPhone: '',
     safetyQuestion: "What's your favorite Jewish holiday?",
     safetyAnswer: 'Passover',
-    bio: 'NYC route captain. Will always find an excuse for bagels.',
+    bio: 'NYC admin. Will always find an excuse for bagels.',
     memberSince: '2019-06-01',
     runsJoined: 210,
   },
   u_ezra: {
     id: 'u_ezra',
-    fullName: 'Ezra Levi',
+    fullName: 'Ezra Feig',
     phone: '+1 (917) 555-0122',
     emergencyContactName: 'Not on file',
     emergencyContactPhone: '',
     safetyQuestion: "What's your favorite Jewish holiday?",
     safetyAnswer: 'Hanukkah',
-    bio: 'Keeps the announcements chat honest.',
+    bio: "NJR's CEO. Keeps the announcements chat honest.",
     memberSince: '2019-08-15',
     runsJoined: 188,
   },
   u_arielle: {
     id: 'u_arielle',
-    fullName: 'Arielle S.',
+    fullName: 'Arielle Disick',
     phone: '+1 (917) 555-0177',
     emergencyContactName: 'Not on file',
     emergencyContactPhone: '',
     safetyQuestion: "What's your favorite Jewish holiday?",
     safetyAnswer: 'Sukkot',
-    bio: 'Approves new members and remembers everyone\'s name.',
+    bio: 'Director of Operations. Approves new members and remembers everyone\'s name.',
     memberSince: '2020-01-10',
     runsJoined: 150,
+  },
+  u_clint: {
+    id: 'u_clint',
+    fullName: 'Clint Hild',
+    phone: '+1 (917) 555-0133',
+    emergencyContactName: 'Not on file',
+    emergencyContactPhone: '',
+    safetyQuestion: "What's your favorite Jewish holiday?",
+    safetyAnswer: 'Hanukkah',
+    bio: 'Team Captain. Sets the pace groups every week.',
+    memberSince: '2020-03-01',
+    runsJoined: 130,
+  },
+  u_danielle: {
+    id: 'u_danielle',
+    fullName: 'Danielle Liberman',
+    phone: '+1 (917) 555-0144',
+    emergencyContactName: 'Not on file',
+    emergencyContactPhone: '',
+    safetyQuestion: "What's your favorite Jewish holiday?",
+    safetyAnswer: 'Purim',
+    bio: 'Local Lead. Your first stop for anything chapter-related.',
+    memberSince: '2021-02-01',
+    runsJoined: 88,
+  },
+  u_shanim: {
+    id: 'u_shanim',
+    fullName: 'Shani Mizrahi',
+    phone: '+1 (917) 555-0155',
+    emergencyContactName: 'Not on file',
+    emergencyContactPhone: '',
+    safetyQuestion: "What's your favorite Jewish holiday?",
+    safetyAnswer: 'Rosh Hashanah',
+    bio: 'Member.',
+    memberSince: '2022-04-01',
+    runsJoined: 40,
+  },
+  u_andrew: {
+    id: 'u_andrew',
+    fullName: 'Andrew Manas',
+    phone: '+1 (917) 555-0166',
+    emergencyContactName: 'Not on file',
+    emergencyContactPhone: '',
+    safetyQuestion: "What's your favorite Jewish holiday?",
+    safetyAnswer: 'Passover',
+    bio: 'Member.',
+    memberSince: '2022-06-01',
+    runsJoined: 25,
+  },
+  u_max: {
+    id: 'u_max',
+    fullName: 'Max Goldberg',
+    phone: '+1 (917) 555-0177',
+    emergencyContactName: 'Not on file',
+    emergencyContactPhone: '',
+    safetyQuestion: "What's your favorite Jewish holiday?",
+    safetyAnswer: 'Hanukkah',
+    bio: 'Member.',
+    memberSince: '2023-01-01',
+    runsJoined: 15,
   },
   u_dana: {
     id: 'u_dana',
@@ -340,10 +400,23 @@ export const users: Record<string, UserProfile> = {
 
 export const memberships: Membership[] = [
   // No u_shani entries — she's the "new user" demo account and should have
-  // to go through the join flow for whatever chapter(s) she picks.
-  { userId: 'u_ron', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2019-06-01' },
-  { userId: 'u_ezra', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2019-08-15' },
-  { userId: 'u_arielle', chapterId: 'ch_nyc', role: 'owner', status: 'approved', requestedAt: '2020-01-10' },
+  // to go through the join flow for whatever chapter(s) she picks. (Note:
+  // u_shani is the logged-in test account; "Shani Mizrahi" below, u_shanim,
+  // is a separate seeded roster member — same name, different person.)
+  //
+  // NYC's real admin roster, per the club: only a CEO (owner-tier) can
+  // change anyone else's role — see permissions.canManageRoles — every
+  // other named title below is manager-tier and shares identical
+  // permissions (approve joins, create/delete chats, post announcements,
+  // delete messages, create/edit events).
+  { userId: 'u_ezra', chapterId: 'ch_nyc', role: 'owner', status: 'approved', requestedAt: '2019-08-15', title: 'CEO' },
+  { userId: 'u_clint', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2020-03-01', title: 'Team Captain' },
+  { userId: 'u_danielle', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2021-02-01', title: 'Local Lead' },
+  { userId: 'u_arielle', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2020-01-10', title: 'Director of Operations' },
+  { userId: 'u_ron', chapterId: 'ch_nyc', role: 'manager', status: 'approved', requestedAt: '2019-06-01', title: 'Admin' },
+  { userId: 'u_shanim', chapterId: 'ch_nyc', role: 'member', status: 'approved', requestedAt: '2022-04-01' },
+  { userId: 'u_andrew', chapterId: 'ch_nyc', role: 'member', status: 'approved', requestedAt: '2022-06-01' },
+  { userId: 'u_max', chapterId: 'ch_nyc', role: 'member', status: 'approved', requestedAt: '2023-01-01' },
   { userId: 'u_dana', chapterId: 'ch_nyc', role: 'member', status: 'approved', requestedAt: '2024-02-20' },
   { userId: 'u_noa', chapterId: 'ch_tlv', role: 'manager', status: 'approved', requestedAt: '2021-05-01' },
   // Pending NYC applicants for testing ManageRequestsScreen — see the
@@ -414,6 +487,12 @@ export const events: RunEvent[] = [
   },
 ];
 
+// Everyone already on the NYC roster, including the u_shani test account —
+// these 5 chats existed before "joined vs. not joined" was a concept, so
+// they start out already-joined for the whole chapter rather than making
+// anyone re-join chats they could already read and post in.
+const NYC_ROSTER_USER_IDS = ['u_shani', 'u_ezra', 'u_ron', 'u_arielle', 'u_clint', 'u_danielle', 'u_shanim', 'u_andrew', 'u_max', 'u_dana'];
+
 export const chatChannels: ChatChannel[] = [
   {
     id: 'chat_announcements',
@@ -424,6 +503,7 @@ export const chatChannels: ChatChannel[] = [
     allowMemberReplies: false,
     createdByUserId: 'u_ezra',
     createdAt: '2019-06-01',
+    memberUserIds: NYC_ROSTER_USER_IDS,
   },
   {
     id: 'chat_general',
@@ -434,6 +514,7 @@ export const chatChannels: ChatChannel[] = [
     allowMemberReplies: true,
     createdByUserId: 'u_ron',
     createdAt: '2019-06-01',
+    memberUserIds: NYC_ROSTER_USER_IDS,
   },
   {
     id: 'chat_not_running',
@@ -444,6 +525,7 @@ export const chatChannels: ChatChannel[] = [
     allowMemberReplies: true,
     createdByUserId: 'u_ron',
     createdAt: '2020-02-01',
+    memberUserIds: NYC_ROSTER_USER_IDS,
   },
   {
     id: 'chat_nyrr',
@@ -454,6 +536,7 @@ export const chatChannels: ChatChannel[] = [
     allowMemberReplies: true,
     createdByUserId: 'u_ezra',
     createdAt: '2020-05-01',
+    memberUserIds: NYC_ROSTER_USER_IDS,
   },
   {
     id: 'chat_networking',
@@ -464,6 +547,65 @@ export const chatChannels: ChatChannel[] = [
     allowMemberReplies: true,
     createdByUserId: 'u_arielle',
     createdAt: '2021-01-01',
+    memberUserIds: NYC_ROSTER_USER_IDS,
+  },
+  // Not-joined-by-default NYC chats, per Shani — visible to every chapter
+  // member under "Not Joined" on ChatsListScreen, joinable with no
+  // approval needed (unlike chapter membership itself).
+  {
+    id: 'chat_merch',
+    chapterId: 'ch_nyc',
+    name: 'NJR Merch',
+    icon: '🛍️',
+    announcementOnly: false,
+    allowMemberReplies: true,
+    createdByUserId: 'u_ron',
+    createdAt: '2026-08-01',
+    memberUserIds: ['u_ron', 'u_dana'],
+  },
+  {
+    id: 'chat_brooklyn',
+    chapterId: 'ch_nyc',
+    name: 'Brooklyn Running',
+    icon: '🌉',
+    announcementOnly: false,
+    allowMemberReplies: true,
+    createdByUserId: 'u_danielle',
+    createdAt: '2026-08-05',
+    memberUserIds: ['u_danielle', 'u_max'],
+  },
+  {
+    id: 'chat_marathon2026',
+    chapterId: 'ch_nyc',
+    name: 'NYC Marathon 2026',
+    icon: '🏅',
+    announcementOnly: false,
+    allowMemberReplies: true,
+    createdByUserId: 'u_clint',
+    createdAt: '2026-08-10',
+    memberUserIds: ['u_clint', 'u_arielle'],
+  },
+  {
+    id: 'chat_manhattan',
+    chapterId: 'ch_nyc',
+    name: 'Manhattan Running',
+    icon: '🏙️',
+    announcementOnly: false,
+    allowMemberReplies: true,
+    createdByUserId: 'u_andrew',
+    createdAt: '2026-08-12',
+    memberUserIds: ['u_andrew'],
+  },
+  {
+    id: 'chat_buddy',
+    chapterId: 'ch_nyc',
+    name: 'Find a Nice Jewish Running Buddy',
+    icon: '🤝',
+    announcementOnly: false,
+    allowMemberReplies: true,
+    createdByUserId: 'u_shanim',
+    createdAt: '2026-08-15',
+    memberUserIds: ['u_shanim', 'u_andrew'],
   },
 ];
 

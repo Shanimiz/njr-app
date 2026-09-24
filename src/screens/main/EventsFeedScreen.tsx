@@ -88,7 +88,7 @@ export function EventsFeedScreen({ navigation }: Props) {
       />
 
       {canCreate ? (
-        <Pressable style={styles.fab}>
+        <Pressable style={styles.fab} onPress={() => navigation.navigate('CreateEvent')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}

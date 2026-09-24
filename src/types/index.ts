@@ -39,6 +39,13 @@ export interface Membership {
   requestedAt: string; // ISO date
   decidedAt?: string;
   decidedByUserId?: string;
+  /** Display job title (e.g. "CEO", "Team Captain", "Local Lead") shown
+   * instead of the generic role label wherever this person's role is
+   * shown. Purely cosmetic — permissions are still driven entirely by
+   * `role`; every non-member title maps to either 'manager' (same
+   * permissions as any other admin) or 'owner' (CEO — the only tier that
+   * can change other people's roles, per permissions.canManageRoles). */
+  title?: string;
 }
 
 export interface UserProfile {
@@ -90,6 +97,12 @@ export interface ChatChannel {
   allowMemberReplies: boolean;
   createdByUserId: string;
   createdAt: string;
+  /** Chapter members who've opted into this specific chat — separate from
+   * chapter membership itself. A chat a chapter member hasn't joined yet
+   * still shows up (under "Not Joined" on ChatsListScreen) but its
+   * messages and member list stay hidden behind a JOIN button until they
+   * do — no approval needed, unlike chapter join requests. */
+  memberUserIds: string[];
 }
 
 export interface ChatMessage {

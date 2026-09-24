@@ -106,9 +106,35 @@ type Action =
   | { type: 'DENY_JOIN_REQUEST'; userId: string; chapterId: string }
   /** Testing-only escape hatch (see RESET_MEMBER above) — there's no real
    * account system to grant roles through yet, so this is how Shani gives
-   * herself manager/owner access to a chapter to test the approval screen,
-   * without needing a backend or losing her other test data. */
-  | { type: 'GRANT_MANAGER_ACCESS'; chapterId: string };
+   * herself CEO (owner-tier) access to a chapter to test the approval
+   * screen and role management, without needing a backend or losing her
+   * other test data. */
+  | { type: 'GRANT_MANAGER_ACCESS'; chapterId: string }
+  /** Only a CEO (owner-tier) can do this — see permissions.canManageRoles.
+   * `title` is the display label (e.g. "Team Captain"); leaving it out
+   * falls back to the generic role label (MEMBER/MANAGER/OWNER). */
+  | { type: 'CHANGE_ROLE'; userId: string; chapterId: string; role: ChapterRole; title?: string }
+  | {
+      type: 'CREATE_CHAT_CHANNEL';
+      chapterId: string;
+      name: string;
+      icon: string;
+      announcementOnly: boolean;
+      allowMemberReplies: boolean;
+    }
+  /** No approval needed, unlike chapter join requests — see
+   * ChatChannel.memberUserIds. */
+  | { type: 'JOIN_CHAT_CHANNEL'; channelId: string }
+  | {
+      type: 'CREATE_RUN_EVENT';
+      chapterId: string;
+      title: string;
+      description: string;
+      dateISO: string;
+      location: string;
+      isFree: boolean;
+      priceCents: number;
+    };
 
 const initialState: AppState = {
   currentUserId,
@@ -286,6 +312,52 @@ function reducer(state: AppState, action: Action): AppState {
       );
       return { ...state, memberships };
     }
+    case 'CHANGE_ROLE': {
+      const memberships = state.memberships.map((m) =>
+        m.userId === action.userId && m.chapterId === action.chapterId ? { ...m, role: action.role, title: action.title } : m
+      );
+      return { ...state, memberships };
+    }
+    case 'CREATE_CHAT_CHANNEL': {
+      const channel: ChatChannel = {
+        id: `chat_${Date.now()}`,
+        chapterId: action.chapterId,
+        name: action.name,
+        icon: action.icon,
+        announcementOnly: action.announcementOnly,
+        allowMemberReplies: action.allowMemberReplies,
+        createdByUserId: state.currentUserId,
+        createdAt: new Date().toISOString(),
+        // The creator starts out joined to their own chat.
+        memberUserIds: [state.currentUserId],
+      };
+      return { ...state, chatChannels: [...state.chatChannels, channel] };
+    }
+    case 'JOIN_CHAT_CHANNEL': {
+      const chatChannels = state.chatChannels.map((c) =>
+        c.id === action.channelId && !c.memberUserIds.includes(state.currentUserId)
+          ? { ...c, memberUserIds: [...c.memberUserIds, state.currentUserId] }
+          : c
+      );
+      return { ...state, chatChannels };
+    }
+    case 'CREATE_RUN_EVENT': {
+      const event: RunEvent = {
+        id: `ev_${Date.now()}`,
+        chapterId: action.chapterId,
+        title: action.title,
+        description: action.description,
+        dateISO: action.dateISO,
+        location: action.location,
+        hostUserId: state.currentUserId,
+        isFree: action.isFree,
+        priceCents: action.isFree ? 0 : action.priceCents,
+        tipsEnabled: action.isFree,
+        goingUserIds: [state.currentUserId],
+        maybeUserIds: [],
+      };
+      return { ...state, events: [...state.events, event] };
+    }
     case 'GRANT_MANAGER_ACCESS': {
       const withoutExisting = state.memberships.filter((m) => !(m.userId === state.currentUserId && m.chapterId === action.chapterId));
       const membership: Membership = {
@@ -296,6 +368,7 @@ function reducer(state: AppState, action: Action): AppState {
         requestedAt: new Date().toISOString(),
         decidedAt: new Date().toISOString(),
         decidedByUserId: state.currentUserId,
+        title: 'CEO',
       };
       const selectedChapterIds = state.selectedChapterIds.includes(action.chapterId)
         ? state.selectedChapterIds

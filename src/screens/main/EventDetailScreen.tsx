@@ -18,7 +18,7 @@ type Props = NativeStackScreenProps<EventsStackParamList, 'EventDetail'>;
  * work in this mock build; payments are not — see src/lib/payments.ts.
  */
 export function EventDetailScreen({ route, navigation }: Props) {
-  const { events, users, eventMessages, currentUserId, getRole, dispatch } = useApp();
+  const { events, users, eventMessages, currentUserId, getRole, getMembership, dispatch } = useApp();
   const [draft, setDraft] = useState('');
 
   const event = events.find((e) => e.id === route.params.eventId);
@@ -26,6 +26,7 @@ export function EventDetailScreen({ route, navigation }: Props) {
 
   const host = users[event.hostUserId];
   const hostRole = getRole(event.hostUserId, event.chapterId);
+  const hostTitle = getMembership(event.hostUserId, event.chapterId)?.title;
   const isGoing = event.goingUserIds.includes(currentUserId);
   const thread = eventMessages.filter((m) => m.eventId === event.id);
 
@@ -64,7 +65,7 @@ export function EventDetailScreen({ route, navigation }: Props) {
           <View style={styles.hostRow}>
             <Avatar size={32} />
             <Text style={styles.hostText}>HOSTED BY {host.fullName.toUpperCase()}</Text>
-            <RoleBadge role={hostRole} />
+            <RoleBadge role={hostRole} title={hostTitle} />
           </View>
 
           <Text style={styles.description}>{event.description}</Text>
@@ -104,13 +105,14 @@ export function EventDetailScreen({ route, navigation }: Props) {
           {thread.map((m) => {
             const author = users[m.authorId];
             const authorRole = getRole(m.authorId, event.chapterId);
+            const authorTitle = getMembership(m.authorId, event.chapterId)?.title;
             return (
               <View key={m.id} style={styles.messageRow}>
                 <Avatar size={28} />
                 <View style={{ flex: 1 }}>
                   <View style={styles.messageAuthorRow}>
                     <Text style={styles.messageAuthor}>{author.fullName.toUpperCase()}</Text>
-                    <RoleBadge role={authorRole} />
+                    <RoleBadge role={authorRole} title={authorTitle} />
                   </View>
                   <Text style={styles.messageText}>{m.text}</Text>
                 </View>

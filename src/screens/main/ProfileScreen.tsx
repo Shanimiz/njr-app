@@ -20,7 +20,7 @@ type Props = BottomTabScreenProps<MainTabParamList, 'ProfileTab'>;
  * write to.
  */
 export function ProfileScreen({ navigation }: Props) {
-  const { currentUser, currentUserId, selectedChapters, activeChapter, memberships, users, getRole, dispatch } = useApp();
+  const { currentUser, currentUserId, selectedChapters, activeChapter, memberships, users, getRole, getMembership, dispatch } = useApp();
 
   const openChapterPicker = () => {
     // One hop up from the tab navigator reaches the root stack, where
@@ -48,12 +48,14 @@ export function ProfileScreen({ navigation }: Props) {
   };
 
   // Testing-only — see GRANT_MANAGER_ACCESS in AppContext. Gives this
-  // device owner access to NYC (the chapter with the most seed data) so
-  // the approval flow can be tested without a real backend or role system.
+  // device CEO (owner-tier) access to NYC (the chapter with the most seed
+  // data) so the approval flow AND role management can be tested without a
+  // real backend or role system.
   const grantManagerAccess = () => dispatch({ type: 'GRANT_MANAGER_ACCESS', chapterId: 'ch_nyc' });
 
   const chapterNames = selectedChapters.map((c) => c.city).join(' · ');
   const activeRole = activeChapter ? getRole(currentUserId, activeChapter.id) : null;
+  const activeTitle = activeChapter ? getMembership(currentUserId, activeChapter.id)?.title : undefined;
   const canViewEmergencyContacts = activeRole ? permissions.canViewEmergencyContacts(activeRole) : false;
   const canManageRoles = activeRole ? permissions.canManageRoles(activeRole) : false;
   const isManagerOrAbove = activeRole === 'manager' || activeRole === 'owner';
@@ -75,7 +77,7 @@ export function ProfileScreen({ navigation }: Props) {
           <Avatar size={70} bg={colors.gold} uri={currentUser.photoUrl} />
           <View style={styles.nameRow}>
             <Text style={styles.name}>{currentUser.fullName.toUpperCase()}</Text>
-            <RoleBadge role={activeRole} />
+            <RoleBadge role={activeRole} title={activeTitle} />
           </View>
           <Text style={styles.chapters}>{chapterNames.toUpperCase()}</Text>
           <Text style={styles.bio}>{currentUser.bio}</Text>
@@ -101,18 +103,26 @@ export function ProfileScreen({ navigation }: Props) {
 
               <Text style={styles.rolesTitle}>MANAGE ROLES</Text>
               {chapterRoster.map((m) => (
-                <RoleRow key={m.userId} name={users[m.userId].fullName} role={m.role} editable={canManageRoles} />
+                <RoleRow
+                  key={m.userId}
+                  name={users[m.userId].fullName}
+                  role={m.role}
+                  title={m.title}
+                  editable={canManageRoles}
+                  onChange={(role, title) => dispatch({ type: 'CHANGE_ROLE', userId: m.userId, chapterId: activeChapter.id, role, title })}
+                />
               ))}
 
               <View style={styles.rulesCard}>
-                <Text style={styles.rulesTitle}>WHAT A MANAGER CAN DO</Text>
+                <Text style={styles.rulesTitle}>WHAT AN ADMIN CAN DO</Text>
                 <Text style={styles.rulesText}>
+                  Team Captain, Local Lead, Director of Operations, Admin — and any other non-member role — can all:{'\n'}
                   ✅ Approve join requests{'\n'}
                   ✅ Create & delete chats{'\n'}
                   ✅ Post in announcement-only chats{'\n'}
                   ✅ Delete any message{'\n'}
                   ✅ Create & edit events{'\n'}
-                  ⬜ Manage other admins' roles — Owner only
+                  ⬜ Manage other admins' roles — CEO only
                 </Text>
               </View>
             </View>
@@ -139,7 +149,7 @@ export function ProfileScreen({ navigation }: Props) {
           </Pressable>
 
           <Pressable style={styles.resetLink} onPress={grantManagerAccess}>
-            <Text style={styles.resetLinkText}>🔑 Make me a manager of New York City (testing)</Text>
+            <Text style={styles.resetLinkText}>🔑 Make me the CEO of New York City (testing)</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -156,16 +166,47 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function RoleRow({ name, role, editable }: { name: string; role: ChapterRole; editable: boolean }) {
+function RoleRow({
+  name,
+  role,
+  title,
+  editable,
+  onChange,
+}: {
+  name: string;
+  role: ChapterRole;
+  title?: string;
+  editable: boolean;
+  onChange: (role: ChapterRole, title?: string) => void;
+}) {
+  // Only a CEO (owner-tier — see permissions.canManageRoles) gets a working
+  // arrow here; everyone else sees the same pill but tapping it does
+  // nothing, same as it always did before this was wired up.
+  const handlePress = () => {
+    if (!editable) return;
+    Alert.alert(`Change ${name}'s role`, 'Team Captain, Local Lead, Director of Operations, and Admin all carry the same permissions — pick whichever title fits, or set a custom one after.', [
+      { text: 'Member', onPress: () => onChange('member', undefined) },
+      { text: 'Admin (manager-level)', onPress: () => onChange('manager', undefined) },
+      { text: 'CEO (full control)', onPress: () => onChange('owner', 'CEO') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const label = title ?? role;
+
   return (
     <View style={styles.roleRow}>
       <View style={styles.roleRowLeft}>
         <Avatar size={32} />
         <Text style={styles.roleName}>{name.toUpperCase()}</Text>
       </View>
-      <Pressable disabled={!editable} style={[styles.rolePill, { backgroundColor: role === 'member' ? colors.border : colors.gold }]}>
+      <Pressable
+        disabled={!editable}
+        onPress={handlePress}
+        style={[styles.rolePill, { backgroundColor: role === 'member' ? colors.border : colors.gold }]}
+      >
         <Text style={[styles.rolePillText, { color: colors.navy }]}>
-          {role.toUpperCase()} {editable ? '▾' : ''}
+          {label.toUpperCase()} {editable ? '▾' : ''}
         </Text>
       </Pressable>
     </View>
