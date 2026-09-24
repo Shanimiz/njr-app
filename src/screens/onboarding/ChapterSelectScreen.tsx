@@ -36,7 +36,12 @@ export function ChapterSelectScreen({ navigation }: Props) {
   // now, a pending request still gets you in (clearly labeled as pending,
   // not approved, on the card below) so the rest of the app stays testable;
   // this should switch to approved-only once the admin approval flow exists.
-  const isMember = (chapterId: string) => !!myMembership(chapterId);
+  const isMember = (chapterId: string) => {
+    const m = myMembership(chapterId);
+    // A denied request shouldn't count as "in" — fall back to the normal
+    // not-a-member state so the person can search the chapter and reapply.
+    return !!m && m.status !== 'rejected';
+  };
 
   const filteredChapters = useMemo(() => {
     const q = query.trim().toLowerCase();

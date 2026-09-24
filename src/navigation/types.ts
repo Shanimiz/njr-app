@@ -8,6 +8,8 @@ export type RootStackParamList = {
   Main: undefined;
   DirectMessages: undefined;
   Payment: { eventId: string; mode: 'pay' | 'tip' };
+  // Reads the manager's activeChapter from context — no params needed.
+  ManageRequests: undefined;
 };
 
 export type MainTabParamList = {

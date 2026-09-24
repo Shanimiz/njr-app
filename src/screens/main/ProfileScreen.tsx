@@ -40,6 +40,18 @@ export function ProfileScreen({ navigation }: Props) {
     rootNav?.navigate('CompleteProfile', { editMode: true });
   };
 
+  const openManageRequests = () => {
+    const rootNav = (navigation.getParent()?.getParent() ?? navigation.getParent()) as
+      | (typeof navigation & { navigate: (screen: 'ManageRequests') => void })
+      | undefined;
+    rootNav?.navigate('ManageRequests');
+  };
+
+  // Testing-only — see GRANT_MANAGER_ACCESS in AppContext. Gives this
+  // device owner access to NYC (the chapter with the most seed data) so
+  // the approval flow can be tested without a real backend or role system.
+  const grantManagerAccess = () => dispatch({ type: 'GRANT_MANAGER_ACCESS', chapterId: 'ch_nyc' });
+
   const chapterNames = selectedChapters.map((c) => c.city).join(' · ');
   const activeRole = activeChapter ? getRole(currentUserId, activeChapter.id) : null;
   const canViewEmergencyContacts = activeRole ? permissions.canViewEmergencyContacts(activeRole) : false;
@@ -49,6 +61,9 @@ export function ProfileScreen({ navigation }: Props) {
   const chapterRoster = activeChapter
     ? memberships.filter((m) => m.chapterId === activeChapter.id && m.status === 'approved')
     : [];
+  const pendingCount = activeChapter
+    ? memberships.filter((m) => m.chapterId === activeChapter.id && m.status === 'pending').length
+    : 0;
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -80,6 +95,10 @@ export function ProfileScreen({ navigation }: Props) {
 
           {isManagerOrAbove && activeChapter ? (
             <View style={styles.rolesSection}>
+              <Pressable style={styles.reviewLink} onPress={openManageRequests}>
+                <Text style={styles.reviewLinkText}>📋 Review pending requests {pendingCount > 0 ? `(${pendingCount})` : ''}</Text>
+              </Pressable>
+
               <Text style={styles.rolesTitle}>MANAGE ROLES</Text>
               {chapterRoster.map((m) => (
                 <RoleRow key={m.userId} name={users[m.userId].fullName} role={m.role} editable={canManageRoles} />
@@ -117,6 +136,10 @@ export function ProfileScreen({ navigation }: Props) {
             }
           >
             <Text style={styles.resetLinkText}>Reset for testing (start onboarding over)</Text>
+          </Pressable>
+
+          <Pressable style={styles.resetLink} onPress={grantManagerAccess}>
+            <Text style={styles.resetLinkText}>🔑 Make me a manager of New York City (testing)</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -165,6 +188,8 @@ const styles = StyleSheet.create({
   statLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.muted },
   emergencyNote: { fontFamily: fonts.bodyRegular, fontSize: 11, color: colors.muted, fontStyle: 'italic' },
   rolesSection: { marginTop: 12, gap: 10 },
+  reviewLink: { backgroundColor: colors.gold, borderRadius: radii.md, paddingVertical: 12, alignItems: 'center' },
+  reviewLinkText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.navy },
   rolesTitle: { fontFamily: fonts.display, fontSize: 16, color: colors.navy, letterSpacing: 0.4 },
   roleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.bgLight, borderRadius: radii.md, padding: 12 },
   roleRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },

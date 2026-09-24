@@ -11,6 +11,7 @@ import { CompleteProfileScreen } from '@/screens/onboarding/CompleteProfileScree
 import { MainTabs } from './MainTabs';
 import { DirectMessagesScreen } from '@/screens/main/DirectMessagesScreen';
 import { PaymentScreen } from '@/screens/main/PaymentScreen';
+import { ManageRequestsScreen } from '@/screens/main/ManageRequestsScreen';
 import { colors } from '@/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -49,6 +50,7 @@ export function RootNavigator() {
             <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
             <Stack.Screen name="DirectMessages" component={DirectMessagesScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Payment" component={PaymentScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="ManageRequests" component={ManageRequestsScreen} options={{ presentation: 'modal' }} />
           </>
         )}
       </Stack.Navigator>

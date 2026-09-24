@@ -97,7 +97,18 @@ type Action =
   | { type: 'RECORD_PAYMENT'; kind: PaymentKind; chapterId: string; eventId?: string; amountCents: number; currency: 'USD' | 'ILS' }
   | { type: 'COMPLETE_PROFILE'; photoUrl: string; bio: string }
   | { type: 'HYDRATE'; payload: PersistedMember | null }
-  | { type: 'RESET_MEMBER' };
+  | { type: 'RESET_MEMBER' }
+  /** A chapter manager/owner approving a pending join request — flips that
+   * membership to 'approved' so the applicant becomes a full member. */
+  | { type: 'APPROVE_JOIN_REQUEST'; userId: string; chapterId: string }
+  /** Same, but denies it — the applicant falls out of "already in" (see
+   * ChapterSelectScreen's isMember) and can search + re-apply later. */
+  | { type: 'DENY_JOIN_REQUEST'; userId: string; chapterId: string }
+  /** Testing-only escape hatch (see RESET_MEMBER above) — there's no real
+   * account system to grant roles through yet, so this is how Shani gives
+   * herself manager/owner access to a chapter to test the approval screen,
+   * without needing a backend or losing her other test data. */
+  | { type: 'GRANT_MANAGER_ACCESS'; chapterId: string };
 
 const initialState: AppState = {
   currentUserId,
@@ -257,6 +268,42 @@ function reducer(state: AppState, action: Action): AppState {
         selectedChapterIds,
         hydrated: true,
       };
+    }
+    case 'APPROVE_JOIN_REQUEST': {
+      const memberships = state.memberships.map((m) =>
+        m.userId === action.userId && m.chapterId === action.chapterId
+          ? { ...m, status: 'approved' as const, decidedAt: new Date().toISOString(), decidedByUserId: state.currentUserId }
+          : m
+      );
+      const chapters = state.chapters.map((c) => (c.id === action.chapterId ? { ...c, memberCount: c.memberCount + 1 } : c));
+      return { ...state, memberships, chapters };
+    }
+    case 'DENY_JOIN_REQUEST': {
+      const memberships = state.memberships.map((m) =>
+        m.userId === action.userId && m.chapterId === action.chapterId
+          ? { ...m, status: 'rejected' as const, decidedAt: new Date().toISOString(), decidedByUserId: state.currentUserId }
+          : m
+      );
+      return { ...state, memberships };
+    }
+    case 'GRANT_MANAGER_ACCESS': {
+      const withoutExisting = state.memberships.filter((m) => !(m.userId === state.currentUserId && m.chapterId === action.chapterId));
+      const membership: Membership = {
+        userId: state.currentUserId,
+        chapterId: action.chapterId,
+        role: 'owner',
+        status: 'approved',
+        requestedAt: new Date().toISOString(),
+        decidedAt: new Date().toISOString(),
+        decidedByUserId: state.currentUserId,
+      };
+      const selectedChapterIds = state.selectedChapterIds.includes(action.chapterId)
+        ? state.selectedChapterIds
+        : [...state.selectedChapterIds, action.chapterId];
+      // Also switches the active chapter to the one just granted, so the
+      // manager tools (gated on activeChapter in ProfileScreen) show up
+      // immediately without a separate chapter-switch step.
+      return { ...state, memberships: [...withoutExisting, membership], selectedChapterIds, activeChapterId: action.chapterId };
     }
     case 'RESET_MEMBER': {
       // Testing-only escape hatch: forget this device's saved member and

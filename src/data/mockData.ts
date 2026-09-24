@@ -293,6 +293,49 @@ export const users: Record<string, UserProfile> = {
     memberSince: '2021-05-01',
     runsJoined: 96,
   },
+  // Fake applicants with a pending NYC request, so the manager
+  // approval screen (ManageRequestsScreen) has real content to review as
+  // soon as Shani grants herself manager access — see the "Make me a
+  // manager" testing link on ProfileScreen. No photo/bio yet, matching a
+  // real applicant who's only gotten through the join form so far.
+  u_jonah: {
+    id: 'u_jonah',
+    fullName: 'Jonah Stein',
+    phone: '+1 (646) 555-0142',
+    emergencyContactName: 'Debra Stein (mother)',
+    emergencyContactPhone: '+1 (646) 555-0143',
+    instagramHandle: 'jonahruns',
+    safetyQuestion: "What's your favorite Jewish holiday?",
+    safetyAnswer: 'Rosh Hashanah — love a good apples-and-honey spread',
+    bio: '',
+    memberSince: new Date().toISOString().slice(0, 10),
+    runsJoined: 0,
+  },
+  u_maya: {
+    id: 'u_maya',
+    fullName: 'Maya Cohen',
+    phone: '+1 (718) 555-0187',
+    emergencyContactName: 'Talia Cohen (sister)',
+    emergencyContactPhone: '+1 (718) 555-0188',
+    safetyQuestion: "What's your favorite Jewish holiday?",
+    safetyAnswer: 'Sukkot, obviously',
+    bio: '',
+    memberSince: new Date().toISOString().slice(0, 10),
+    runsJoined: 0,
+  },
+  u_eli: {
+    id: 'u_eli',
+    fullName: 'Eli Baumgarten',
+    phone: '+1 (203) 555-0119',
+    emergencyContactName: 'Rachel Baumgarten (wife)',
+    emergencyContactPhone: '+1 (203) 555-0120',
+    instagramHandle: 'eli.runs.nyc',
+    safetyQuestion: "What's your favorite Jewish holiday?",
+    safetyAnswer: 'Passover — the seder, not the matzah',
+    bio: '',
+    memberSince: new Date().toISOString().slice(0, 10),
+    runsJoined: 0,
+  },
 };
 
 export const memberships: Membership[] = [
@@ -303,6 +346,11 @@ export const memberships: Membership[] = [
   { userId: 'u_arielle', chapterId: 'ch_nyc', role: 'owner', status: 'approved', requestedAt: '2020-01-10' },
   { userId: 'u_dana', chapterId: 'ch_nyc', role: 'member', status: 'approved', requestedAt: '2024-02-20' },
   { userId: 'u_noa', chapterId: 'ch_tlv', role: 'manager', status: 'approved', requestedAt: '2021-05-01' },
+  // Pending NYC applicants for testing ManageRequestsScreen — see the
+  // matching users above.
+  { userId: 'u_jonah', chapterId: 'ch_nyc', role: 'member', status: 'pending', requestedAt: '2026-09-20' },
+  { userId: 'u_maya', chapterId: 'ch_nyc', role: 'member', status: 'pending', requestedAt: '2026-09-21' },
+  { userId: 'u_eli', chapterId: 'ch_nyc', role: 'member', status: 'pending', requestedAt: '2026-09-22' },
 ];
 
 export const events: RunEvent[] = [
